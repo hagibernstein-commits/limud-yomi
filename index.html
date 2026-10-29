@@ -9,7 +9,7 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="הלימוד היומי">
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='22' fill='%231B3A6B'/><text y='.9em' x='50%' text-anchor='middle' font-size='65'>📖</text></svg>">
-  <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='22' fill='%231B3A6B'/><text y='.9em' x='50%' text-anchor='middle' font-size='65'>📖</text></svg>">
+  <link rel="apple-touch-icon" href="icon-192.png">
   <title>הלימוד היומי שלי</title>
   <script src="vendor/tailwind.js"></script>
   <script src="vendor/tailwindcss.min.js"></script>
@@ -133,14 +133,18 @@
         </div>
       </div>
 
-      <!-- כפתורים מהירים בראש האפליקציה: רצף ימים + החלפת ערכת צבעים -->
-      <div class="flex items-center gap-2">
-        <button onclick="navigateToPage('catchup')" class="px-3 py-2 rounded-xl app-btn-secondary flex items-center gap-1.5 text-xs font-bold" title="רצף ימי לימוד">
-          <span class="text-base">🔥</span>
+      <!-- כפתורים מהירים בראש האפליקציה: רצף ימים + סנכרון ענן + החלפת ערכת צבעים -->
+      <div class="flex items-center gap-1.5">
+        <button onclick="navigateToPage('settings')" class="px-2.5 py-2 rounded-xl app-btn-secondary flex items-center gap-1 text-xs font-bold" title="סנכרון ענן והתראות">
+          <span class="text-sm">☁️</span>
+          <span>ענן</span>
+        </button>
+        <button onclick="navigateToPage('catchup')" class="px-2.5 py-2 rounded-xl app-btn-secondary flex items-center gap-1 text-xs font-bold" title="רצף ימי לימוד">
+          <span class="text-sm">🔥</span>
           <span id="headerStreakText">0</span>
         </button>
-        <button onclick="cycleThemeQuick()" id="quickThemeBtn" class="px-3 py-2 rounded-xl app-btn-secondary flex items-center gap-1.5 text-xs font-bold" title="החלף ערכת צבעים (בהיר / כהה / אוטומטי)">
-          <span id="quickThemeIcon" class="text-base">☀️</span>
+        <button onclick="cycleThemeQuick()" id="quickThemeBtn" class="px-2.5 py-2 rounded-xl app-btn-secondary flex items-center gap-1 text-xs font-bold" title="החלף ערכת צבעים (בהיר / כהה / אוטומטי)">
+          <span id="quickThemeIcon" class="text-sm">☀️</span>
           <span id="quickThemeLabel">בהיר</span>
         </button>
       </div>
@@ -175,8 +179,8 @@
       </button>
 
       <button onclick="navigateToPage('settings')" id="navBtn-settings" class="py-2 px-1 rounded-2xl flex flex-col items-center justify-center gap-1 transition-all">
-        <span class="text-xl">🎨</span>
-        <span class="text-xs font-bold leading-none">עיצוב</span>
+        <span class="text-xl">☁️</span>
+        <span class="text-xs font-bold leading-none">ענן ועיצוב</span>
       </button>
     </nav>
 
@@ -783,6 +787,12 @@
       readerFontSize: 20,
       showCommentaries: true,
       reminderTime: '20:30',
+      reminderEnabled: true,
+      lastReminderFiredDate: '',
+      syncUserId: '',
+      lastCloudKey: '',
+      lastSyncTimeStr: '',
+      syncStatusMsg: 'טרם הוגדר מזהה סנכרון',
       plannerSelectedTrackId: 'kuzari',
       readerActiveTrackId: null,
       tracks: [],
@@ -802,6 +812,11 @@
           state.readerFontSize = parsed.readerFontSize || 20;
           state.showCommentaries = parsed.showCommentaries !== undefined ? parsed.showCommentaries : true;
           state.reminderTime = parsed.reminderTime || '20:30';
+          state.reminderEnabled = parsed.reminderEnabled !== undefined ? parsed.reminderEnabled : true;
+          state.lastReminderFiredDate = parsed.lastReminderFiredDate || '';
+          state.syncUserId = parsed.syncUserId || '';
+          state.lastCloudKey = parsed.lastCloudKey || '';
+          state.lastSyncTimeStr = parsed.lastSyncTimeStr || '';
           state.plannerSelectedTrackId = parsed.plannerSelectedTrackId || 'kuzari';
           state.completedMap = parsed.completedMap || {};
           state.notes = parsed.notes || [];
@@ -822,32 +837,57 @@
         } else {
           state.tracks = JSON.parse(JSON.stringify(DEFAULT_TRACKS)).map((t, i) => ({ ...t, order: i }));
         }
+
+        // בדיקה אם הקישור נפתח עם פרמטר סנכרון אוטומטי (?sync=...)
+        const urlParams = new URLSearchParams(window.location.search);
+        const syncFromUrl = urlParams.get('sync');
+        if (syncFromUrl && syncFromUrl.trim()) {
+          state.syncUserId = syncFromUrl.trim();
+        }
       } catch (e) {
         state.tracks = JSON.parse(JSON.stringify(DEFAULT_TRACKS)).map((t, i) => ({ ...t, order: i }));
       }
       applyThemeToDOM();
     }
 
-    function saveState() {
+    function buildSyncPayload() {
+      return {
+        version: 3,
+        updatedAt: Date.now(),
+        themeMode: state.themeMode,
+        busyDayMode: state.busyDayMode,
+        readerFontSize: state.readerFontSize,
+        showCommentaries: state.showCommentaries,
+        reminderTime: state.reminderTime,
+        reminderEnabled: state.reminderEnabled,
+        lastReminderFiredDate: state.lastReminderFiredDate,
+        syncUserId: state.syncUserId,
+        lastCloudKey: state.lastCloudKey,
+        lastSyncTimeStr: state.lastSyncTimeStr,
+        plannerSelectedTrackId: state.plannerSelectedTrackId,
+        completedMap: state.completedMap,
+        notes: state.notes,
+        tracks: state.tracks.map(t => ({
+          id: t.id,
+          enabled: t.enabled,
+          isCore: t.isCore,
+          order: t.order,
+          pace: t.pace
+        }))
+      };
+    }
+
+    function saveState(skipCloudAutoPush = false) {
       try {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify({
-          themeMode: state.themeMode,
-          busyDayMode: state.busyDayMode,
-          readerFontSize: state.readerFontSize,
-          showCommentaries: state.showCommentaries,
-          reminderTime: state.reminderTime,
-          plannerSelectedTrackId: state.plannerSelectedTrackId,
-          completedMap: state.completedMap,
-          notes: state.notes,
-          tracks: state.tracks.map(t => ({
-            id: t.id,
-            enabled: t.enabled,
-            isCore: t.isCore,
-            order: t.order,
-            pace: t.pace
-          }))
-        }));
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(buildSyncPayload()));
       } catch (e) {}
+
+      if (!skipCloudAutoPush && state.syncUserId) {
+        clearTimeout(window._cloudSyncDebounce);
+        window._cloudSyncDebounce = setTimeout(() => {
+          pushStateToCloud(true);
+        }, 1200);
+      }
     }
 
     // זיהוי האם ברירת המחדל של הטלפון/המערכת היא מצב כהה
@@ -1721,12 +1761,134 @@
       `;
     }
 
-    // ==================== דף 5: הגדרות ועיצוב (ערכת צבעים, גופן ותזכורות) ====================
+    // ==================== דף 5: הגדרות, סנכרון ענן, תזכורות אמיתיות ועיצוב ====================
     function renderSettingsPage(container) {
+      const notifSupported = ('Notification' in window);
+      const notifPerm = notifSupported ? Notification.permission : 'unsupported';
+      const notifStatusLabel = notifPerm === 'granted'
+        ? 'פעילה בדפדפן ✓'
+        : (notifPerm === 'denied' ? 'חסומה בהגדרות הדפדפן' : 'לחץ למטה להפעלה');
+
       container.innerHTML = `
         <div class="page-animate space-y-4">
 
-          <!-- בחירת ערכת צבעים: בהירה / כהה / ברירת מחדל כמו הטלפון -->
+          <!-- 1. סנכרון ענן אמיתי בין מכשירים (Cloud Sync) -->
+          <section class="app-card rounded-3xl p-4 space-y-3.5 shadow-sm" style="border-color: var(--app-primary); border-width: 2px;">
+            <div class="flex items-start justify-between gap-2">
+              <div>
+                <h2 class="font-extrabold text-base flex items-center gap-2">
+                  <span>☁️</span>
+                  <span>סנכרון ענן בין טלפונים ומחשבים</span>
+                </h2>
+                <p class="text-xs app-text-muted mt-0.5 leading-relaxed">
+                  הגדר מזהה סנכרון אישי (למשל שמך או קוד סודי). כל סימון "למדתי", רצף ימים, קצב סיום וחידוש תורה יגובו אוטומטית לענן ויעברו איתך לכל טלפון!
+                </p>
+              </div>
+              <span class="px-2.5 py-1 rounded-full text-xs font-extrabold shrink-0 ${state.syncUserId ? 'app-btn-success' : 'app-card-alt'}">
+                ${state.syncUserId ? 'מחובר ☁️' : 'מקומי בלבד'}
+              </span>
+            </div>
+
+            <div class="space-y-2">
+              <label class="text-xs font-bold block">מזהה סנכרון אישי (כתוב מילה/מספר קבוע שתזכור):</label>
+              <div class="flex gap-2">
+                <input type="text" id="syncUserIdInput" value="${state.syncUserId}" placeholder="לחץ 🎲 ליצירת קוד מאובטח" class="flex-1 rounded-2xl p-3 text-sm font-bold app-card-alt focus:outline-none">
+                <button onclick="generateRandomSyncId()" class="px-3 py-2.5 rounded-2xl app-btn-secondary text-xs font-bold shrink-0" title="צור קוד אוטומטי">🎲 צור קוד</button>
+              </div>
+            </div>
+
+            <!-- כפתורי סנכרון ראשיים גדולים -->
+            <div class="grid grid-cols-2 gap-2.5">
+              <button onclick="saveSyncIdAndPush()" class="py-3.5 px-3 rounded-2xl app-btn-primary font-extrabold text-xs flex items-center justify-center gap-1.5 shadow-sm">
+                <span>⬆️</span>
+                <span>שמור וגבה לענן</span>
+              </button>
+              <button onclick="pullStateFromCloud(false)" class="py-3.5 px-3 rounded-2xl app-btn-secondary font-extrabold text-xs flex items-center justify-center gap-1.5 shadow-sm">
+                <span>⬇️</span>
+                <span>משוך נתונים מהענן</span>
+              </button>
+            </div>
+
+            <!-- סטטוס סנכרון וקישור קסם למעבר לטלפון חדש -->
+            <div class="app-card-alt rounded-2xl p-3 space-y-2 text-xs">
+              <div class="flex items-center justify-between">
+                <span class="app-text-muted font-semibold">סטטוס ענן:</span>
+                <span class="font-bold">${state.syncStatusMsg}</span>
+              </div>
+              ${state.lastSyncTimeStr ? `
+                <div class="flex items-center justify-between">
+                  <span class="app-text-muted font-semibold">סנכרון אחרון:</span>
+                  <span class="font-bold">${state.lastSyncTimeStr}</span>
+                </div>
+              ` : ''}
+              ${state.syncUserId ? `
+                <div class="pt-1.5 border-t border-[var(--app-border)] flex flex-col gap-2">
+                  <button onclick="copyMagicSyncLink()" class="w-full py-2.5 px-3 rounded-xl app-card font-bold text-xs flex items-center justify-center gap-1.5">
+                    <span>🔗</span>
+                    <span>העתק קישור אישי (פותח ומסנכרן אוטומטית בטלפון חדש)</span>
+                  </button>
+                </div>
+              ` : ''}
+            </div>
+
+            <!-- גיבוי וייבוא לקובץ מקומי -->
+            <div class="grid grid-cols-2 gap-2 pt-1">
+              <button onclick="exportBackupJsonFile()" class="py-2.5 px-3 rounded-xl app-btn-secondary text-xs font-bold">📥 הורד קובץ גיבוי (.json)</button>
+              <label class="py-2.5 px-3 rounded-xl app-btn-secondary text-xs font-bold text-center cursor-pointer">
+                <span>📤 שחזר מקובץ גיבוי</span>
+                <input type="file" accept=".json" onchange="importBackupJsonFile(event)" class="hidden">
+              </label>
+            </div>
+          </section>
+
+          <!-- 2. מערכת תזכורות יומיות אמיתית ופועלת (יומן הטלפון + התראות דפדפן + צליל) -->
+          <section class="app-card rounded-3xl p-4 space-y-3.5 shadow-sm">
+            <div class="flex items-center justify-between">
+              <div>
+                <h2 class="font-extrabold text-base">🔔 תזכורת יומית אמיתית ללימוד</h2>
+                <p class="text-xs app-text-muted mt-0.5">הגדר שעה קבועה והפעל התראה ביומן הטלפון או בדפדפן:</p>
+              </div>
+              <span class="px-2.5 py-1 rounded-full text-xs font-bold app-card-alt">${notifStatusLabel}</span>
+            </div>
+
+            <!-- בחירת שעה מדויקת + כפתורים מהירים -->
+            <div class="flex items-center gap-2">
+              <input type="time" id="customReminderTimeInput" value="${state.reminderTime}" onchange="setReminderPreset(this.value)" class="flex-1 rounded-2xl p-3 text-base font-extrabold text-center app-card-alt">
+              <button onclick="toggleReminderActive()" class="px-4 py-3 rounded-2xl font-bold text-xs ${state.reminderEnabled ? 'app-btn-success' : 'app-btn-secondary'}">
+                ${state.reminderEnabled ? 'פעיל ✓' : 'כבוי'}
+              </button>
+            </div>
+
+            <div class="grid grid-cols-4 gap-2">
+              ${['07:30', '13:30', '20:30', '22:00'].map(t => `
+                <button onclick="setReminderPreset('${t}')" class="py-2.5 rounded-2xl font-bold text-xs ${state.reminderTime === t ? 'app-btn-primary' : 'app-btn-secondary'}">
+                  ${t}
+                </button>
+              `).join('')}
+            </div>
+
+            <!-- כפתורי הפעלת התראות אמת בטלפון -->
+            <div class="space-y-2 pt-2 border-t border-[var(--app-border)]">
+              <div class="text-xs font-bold app-text-muted">בחר איך תרצה שהטלפון יתריע לך מדי יום בשעה ${state.reminderTime}:</div>
+
+              <button onclick="openGoogleCalendarRecurringReminder()" class="w-full py-3.5 px-4 rounded-2xl app-btn-primary font-extrabold text-sm flex items-center justify-center gap-2 shadow-sm">
+                <span>📅</span>
+                <span>הוסף תזכורת יומית קבועה ל-Google Calendar</span>
+              </button>
+
+              <button onclick="downloadIcsAlarmFile()" class="w-full py-3.5 px-4 rounded-2xl app-btn-secondary font-extrabold text-sm flex items-center justify-center gap-2">
+                <span>⏰</span>
+                <span>הורד התראה יומית לשעון/יומן הטלפון (Apple / Android .ics)</span>
+              </button>
+
+              <button onclick="enableAndTestBrowserNotification()" class="w-full py-3 px-4 rounded-2xl app-btn-secondary font-bold text-xs flex items-center justify-center gap-2">
+                <span>🔔</span>
+                <span>הפעל התראות דפדפן ושלח התראת בדיקה + צליל עכשיו</span>
+              </button>
+            </div>
+          </section>
+
+          <!-- 3. בחירת ערכת צבעים: בהירה / כהה / ברירת מחדל כמו הטלפון -->
           <section class="app-card rounded-3xl p-4 space-y-3.5 shadow-sm">
             <div>
               <h2 class="font-extrabold text-base">🎨 ערכת הצבעים של האפליקציה</h2>
@@ -1769,7 +1931,7 @@
             </div>
           </section>
 
-          <!-- גודל גופן הקריאה -->
+          <!-- 4. גודל גופן הקריאה -->
           <section class="app-card rounded-3xl p-4 space-y-3 shadow-sm">
             <div class="flex items-center justify-between">
               <h2 class="font-extrabold text-base">🔠 גודל גופן בקורא הספרים</h2>
@@ -1785,19 +1947,6 @@
 
             <div class="app-card-alt rounded-2xl p-3.5 leading-relaxed" style="font-size: ${state.readerFontSize}px;">
               "כִּי אִם בְּתוֹרַת ה׳ חֶפְצוֹ וּבְתוֹרָתוֹ יֶהְגֶּה יוֹמָם וָלָיְלָה"
-            </div>
-          </section>
-
-          <!-- תזכורת יומית -->
-          <section class="app-card rounded-3xl p-4 space-y-3 shadow-sm">
-            <h2 class="font-extrabold text-base">🔔 שעת תזכורת יומית ללימוד</h2>
-            <p class="text-xs app-text-muted">בחר שעה קבועה לקביעות היומית שלך בתורה:</p>
-            <div class="grid grid-cols-4 gap-2">
-              ${['07:30', '13:30', '20:30', '22:00'].map(t => `
-                <button onclick="setReminderPreset('${t}')" class="py-3 rounded-2xl font-bold text-sm ${state.reminderTime === t ? 'app-btn-primary' : 'app-btn-secondary'}">
-                  ${t}
-                </button>
-              `).join('')}
             </div>
           </section>
 
@@ -2182,16 +2331,409 @@
     }
 
     function setReminderPreset(timeStr) {
+      if (!timeStr) return;
       state.reminderTime = timeStr;
+      state.reminderEnabled = true;
       saveState();
       renderCurrentPage();
       showToast(`תזכורת יומית הוגדרה לשעה ${timeStr} 🔔`);
     }
 
+    function toggleReminderActive() {
+      state.reminderEnabled = !state.reminderEnabled;
+      saveState();
+      renderCurrentPage();
+      showToast(state.reminderEnabled ? `התזכורת היומית הופעלה לשעה ${state.reminderTime} 🔔` : 'התזכורת היומית כובתה');
+    }
+
+    // ==================== 7. מנוע תזכורות אמיתי (Google Calendar, קובץ .ics, Web Notifications וצליל) ====================
+    function playChimeSound() {
+      try {
+        const AudioCtx = window.AudioContext || window.webkitAudioContext;
+        if (!AudioCtx) return;
+        const ctx = new AudioCtx();
+        const notes = [523.25, 659.25, 783.99, 1046.50]; // C5, E5, G5, C6
+        notes.forEach((freq, idx) => {
+          const osc = ctx.createOscillator();
+          const gain = ctx.createGain();
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(freq, ctx.currentTime + idx * 0.14);
+          gain.gain.setValueAtTime(0.18, ctx.currentTime + idx * 0.14);
+          gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + idx * 0.14 + 0.55);
+          osc.connect(gain);
+          gain.connect(ctx.destination);
+          osc.start(ctx.currentTime + idx * 0.14);
+          osc.stop(ctx.currentTime + idx * 0.14 + 0.6);
+        });
+      } catch (e) {}
+    }
+
+    function getUncompletedSummaryText() {
+      const todayKey = toDateKey(new Date());
+      const coreTracks = state.tracks.filter(t => t.enabled && t.isCore);
+      const pending = coreTracks.filter(t => !state.completedMap[`${todayKey}::${t.id}`]);
+      if (pending.length === 0) {
+        return 'אשריך! השלמת את כל לימודי הליבה של היום!';
+      }
+      const names = pending.slice(0, 4).map(t => t.titleHe.split('–')[0].trim()).join(', ');
+      return `נותרו ${pending.length} לימודי ליבה להיום: ${names}`;
+    }
+
+    function fireDailyReminderNow(isTest = false) {
+      playChimeSound();
+      const summary = getUncompletedSummaryText();
+      showToast(`🔔 תזכורת לימוד יומי: ${summary}`);
+
+      if ('Notification' in window && Notification.permission === 'granted') {
+        try {
+          new Notification('📖 הגיע זמן הלימוד היומי שלך!', {
+            body: summary,
+            dir: 'rtl',
+            lang: 'he-IL'
+          });
+        } catch (e) {}
+      }
+      if (!isTest) {
+        state.lastReminderFiredDate = toDateKey(new Date());
+        saveState(true);
+      }
+    }
+
+    async function enableAndTestBrowserNotification() {
+      playChimeSound();
+      if (!('Notification' in window)) {
+        showToast('🔔 צליל התראה הופעל! (לחיבור קבוע בטלפון מומלץ להוסיף ליומן למטה)');
+        return;
+      }
+      try {
+        const perm = await Notification.requestPermission();
+        renderCurrentPage();
+        if (perm === 'granted') {
+          fireDailyReminderNow(true);
+        } else {
+          showToast('🔔 צליל הופעל! לקבלת התראות גם כשהדפדפן סגור – לחץ על כפתור היומן למטה');
+        }
+      } catch (e) {
+        fireDailyReminderNow(true);
+      }
+    }
+
+    function openGoogleCalendarRecurringReminder() {
+      const [hh, mm] = (state.reminderTime || '20:30').split(':').map(Number);
+      const now = new Date();
+      const start = new Date(now.getFullYear(), now.getMonth(), now.getDate(), hh || 20, mm || 30, 0);
+      if (start < now) start.setDate(start.getDate() + 1);
+      const end = new Date(start.getTime() + 25 * 60000);
+
+      const fmtCalDate = (d) => {
+        const pad = (n) => String(n).padStart(2, '0');
+        return `${d.getFullYear()}${pad(d.getMonth() + 1)}${pad(d.getDate())}T${pad(d.getHours())}${pad(d.getMinutes())}00`;
+      };
+
+      const coreNames = state.tracks.filter(t => t.enabled && t.isCore).map(t => `• ${t.titleHe}`).join('\n');
+      const appUrl = window.location.href.split('?')[0] + (state.syncUserId ? `?sync=${encodeURIComponent(state.syncUserId)}` : '');
+      const details = `קביעות יומית בתורה!\n\nמסלולי הליבה שלי:\n${coreNames}\n\nכניסה ישירה לאפליקציה:\n${appUrl}`;
+
+      const gcalUrl = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent('📖 הלימוד היומי שלי')}&dates=${fmtCalDate(start)}/${fmtCalDate(end)}&details=${encodeURIComponent(details)}&recur=${encodeURIComponent('RRULE:FREQ=DAILY')}`;
+      window.open(gcalUrl, '_blank', 'noopener');
+      showToast('נפתח Google Calendar ליצירת התראה יומית קבועה בטלפון! 📅');
+    }
+
+    function downloadIcsAlarmFile() {
+      const [hh, mm] = (state.reminderTime || '20:30').split(':').map(Number);
+      const now = new Date();
+      const start = new Date(now.getFullYear(), now.getMonth(), now.getDate(), hh || 20, mm || 30, 0);
+      const end = new Date(start.getTime() + 25 * 60000);
+      const pad = (n) => String(n).padStart(2, '0');
+      const fmtLocal = (d) => `${d.getFullYear()}${pad(d.getMonth() + 1)}${pad(d.getDate())}T${pad(d.getHours())}${pad(d.getMinutes())}00`;
+
+      const appUrl = window.location.href.split('?')[0] + (state.syncUserId ? `?sync=${encodeURIComponent(state.syncUserId)}` : '');
+      const icsLines = [
+        'BEGIN:VCALENDAR',
+        'VERSION:2.0',
+        'PRODID:-//Limud Yomi//HE',
+        'BEGIN:VEVENT',
+        `UID:limud-yomi-${Date.now()}@app`,
+        `DTSTAMP:${fmtLocal(now)}Z`,
+        `DTSTART:${fmtLocal(start)}`,
+        `DTEND:${fmtLocal(end)}`,
+        'RRULE:FREQ=DAILY',
+        'SUMMARY:📖 הלימוד היומי שלי',
+        `DESCRIPTION:הגיע זמן הקביעות היומית בתורה! פתח את האפליקציה: ${appUrl}`,
+        'BEGIN:VALARM',
+        'TRIGGER:-PT0M',
+        'ACTION:DISPLAY',
+        'DESCRIPTION:📖 הגיע זמן הלימוד היומי שלך!',
+        'END:VALARM',
+        'END:VEVENT',
+        'END:VCALENDAR'
+      ].join('\r\n');
+
+      const blob = new Blob([icsLines], { type: 'text/calendar;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `limud-yomi-${(state.reminderTime || '2030').replace(':', '')}.ics`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      showToast('קובץ ההתראה היומית (.ics) ירד! פתח אותו להפעלה ביומן הטלפון ⏰');
+    }
+
+    function startReminderDaemon() {
+      setInterval(() => {
+        if (!state.reminderEnabled || !state.reminderTime) return;
+        const now = new Date();
+        const hh = String(now.getHours()).padStart(2, '0');
+        const mm = String(now.getMinutes()).padStart(2, '0');
+        const currentHM = `${hh}:${mm}`;
+        const todayKey = toDateKey(now);
+        if (currentHM === state.reminderTime && state.lastReminderFiredDate !== todayKey) {
+          fireDailyReminderNow(false);
+        }
+      }, 20000);
+    }
+
+    // ==================== 8. מנוע סנכרון ענן אמיתי בין מכשירים (Cloud Sync) ====================
+    function sanitizeSyncTopic(userId) {
+      const clean = String(userId || '').trim().toLowerCase().replace(/[^a-z0-9_-]/g, '_');
+      return clean ? `limud_yomi_sync_v3_${clean}` : '';
+    }
+
+    function generateRandomSyncId() {
+      const alphabet = 'abcdefghjkmnpqrstuvwxyz23456789';
+      const bytes = new Uint8Array(16);
+      crypto.getRandomValues(bytes);
+      let suffix = '';
+      for (let i = 0; i < bytes.length; i++) suffix += alphabet[bytes[i] % alphabet.length];
+      const newId = `limud-${suffix}`;
+      const inputEl = document.getElementById('syncUserIdInput');
+      if (inputEl) inputEl.value = newId;
+      state.syncUserId = newId;
+      saveState(true);
+      pushStateToCloud(false);
+    }
+
+    function saveSyncIdAndPush() {
+      const inputEl = document.getElementById('syncUserIdInput');
+      const val = inputEl ? inputEl.value.trim() : state.syncUserId;
+      if (!val) {
+        showToast('אנא הקלד מזהה סנכרון אישי או לחץ על "צור קוד" ☁️');
+        return;
+      }
+      state.syncUserId = val;
+      saveState(true);
+      pushStateToCloud(false);
+    }
+
+    async function pushStateToCloud(silent = false) {
+      if (!state.syncUserId) return;
+      const topic = sanitizeSyncTopic(state.syncUserId);
+      if (!topic) return;
+
+      if (!silent) {
+        state.syncStatusMsg = 'מגבה נתונים לענן... ⏳';
+        renderCurrentPage();
+      }
+
+      try {
+        const payload = buildSyncPayload();
+        // שלב 1: שמירת ה-JSON המלא ב-bytebin
+        const postResp = await fetch('https://bytebin.lucko.me/post', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        if (!postResp.ok) throw new Error('bytebin error');
+        const postData = await postResp.json();
+        const cloudKey = postData.key;
+
+        // שלב 2: עדכון המצביע בערוץ האישי ב-ntfy.sh כדי שכל מכשיר אחר ימצא אותו מיד לפי המזהה האישי
+        await fetch(`https://ntfy.sh/${topic}`, {
+          method: 'POST',
+          body: JSON.stringify({
+            cloudKey,
+            updatedAt: payload.updatedAt,
+            syncUserId: state.syncUserId
+          })
+        });
+
+        const now = new Date();
+        state.lastCloudKey = cloudKey;
+        state.lastSyncTimeStr = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}:${String(now.getSeconds()).padStart(2, '0')}`;
+        state.syncStatusMsg = `מסונכרן לענן ✓ (קוד: ${cloudKey})`;
+        saveState(true);
+        if (state.currentPage === 'settings') renderCurrentPage();
+        if (!silent) showToast('כל הנתונים, הרצף והחידושים גובו לענן בהצלחה! ☁️✓');
+      } catch (e) {
+        state.syncStatusMsg = 'שמור מקומית (ממתין לחיבור רשת)';
+        if (state.currentPage === 'settings') renderCurrentPage();
+        if (!silent) showToast('שגיאת רשת בגיבוי לענן – הנתונים שמורים מקומית');
+      }
+    }
+
+    function mergeCloudPayload(cloud) {
+      if (!cloud || typeof cloud !== 'object') return;
+
+      // 1. מיזוג כל הימים שסומנו כ"למדתי" משני המכשירים (כדי שהרצף לעולם לא יימחק!)
+      if (cloud.completedMap && typeof cloud.completedMap === 'object') {
+        Object.keys(cloud.completedMap).forEach(k => {
+          if (cloud.completedMap[k]) state.completedMap[k] = true;
+        });
+      }
+
+      // 2. מיזוג מחברת החידושים ללא כפילויות
+      if (Array.isArray(cloud.notes)) {
+        const existingIds = new Set(state.notes.map(n => String(n.id)));
+        cloud.notes.forEach(n => {
+          if (n && !existingIds.has(String(n.id))) {
+            state.notes.push(n);
+            existingIds.add(String(n.id));
+          }
+        });
+        state.notes.sort((a, b) => (b.id || 0) - (a.id || 0));
+      }
+
+      // 3. עדכון הגדרות ספרים וקצב סיום
+      if (Array.isArray(cloud.tracks)) {
+        const cloudTracksMap = {};
+        cloud.tracks.forEach(t => { cloudTracksMap[t.id] = t; });
+        state.tracks = state.tracks.map(t => {
+          const ct = cloudTracksMap[t.id];
+          if (!ct) return t;
+          return {
+            ...t,
+            enabled: ct.enabled !== undefined ? ct.enabled : t.enabled,
+            isCore: ct.isCore !== undefined ? ct.isCore : t.isCore,
+            order: ct.order !== undefined ? ct.order : t.order,
+            pace: { ...t.pace, ...(ct.pace || {}) }
+          };
+        }).sort((a, b) => a.order - b.order);
+      }
+
+      if (cloud.themeMode) state.themeMode = cloud.themeMode;
+      if (cloud.readerFontSize) state.readerFontSize = cloud.readerFontSize;
+      if (cloud.reminderTime) state.reminderTime = cloud.reminderTime;
+      applyThemeToDOM();
+    }
+
+    async function pullStateFromCloud(silent = false) {
+      const inputEl = document.getElementById('syncUserIdInput');
+      if (inputEl && inputEl.value.trim()) {
+        state.syncUserId = inputEl.value.trim();
+      }
+      if (!state.syncUserId) {
+        if (!silent) showToast('הזן תחילה את מזהה הסנכרון האישי שלך ☁️');
+        return;
+      }
+
+      const topic = sanitizeSyncTopic(state.syncUserId);
+      if (!silent) {
+        state.syncStatusMsg = 'מושך נתונים מהענן... ⏳';
+        renderCurrentPage();
+      }
+
+      try {
+        const pollResp = await fetch(`https://ntfy.sh/${topic}/json?poll=1`);
+        if (!pollResp.ok) throw new Error('poll failed');
+        const text = await pollResp.text();
+        const lines = text.trim().split('\n').filter(Boolean);
+        let latestKey = null;
+
+        for (let i = lines.length - 1; i >= 0; i--) {
+          try {
+            const evt = JSON.parse(lines[i]);
+            if (evt.event === 'message' && evt.message) {
+              const msgObj = JSON.parse(evt.message);
+              if (msgObj && msgObj.cloudKey) {
+                latestKey = msgObj.cloudKey;
+                break;
+              }
+            }
+          } catch (_) {}
+        }
+
+        if (!latestKey) {
+          state.syncStatusMsg = 'טרם נמצא גיבוי למזהה זה – יוצר גיבוי ראשוני...';
+          await pushStateToCloud(silent);
+          return;
+        }
+
+        const dataResp = await fetch(`https://bytebin.lucko.me/${latestKey}`);
+        if (!dataResp.ok) throw new Error('snapshot fetch failed');
+        const cloudPayload = await dataResp.json();
+
+        mergeCloudPayload(cloudPayload);
+        const now = new Date();
+        state.lastCloudKey = latestKey;
+        state.lastSyncTimeStr = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}:${String(now.getSeconds()).padStart(2, '0')}`;
+        state.syncStatusMsg = `סונכרן מהענן בהצלחה ✓ (${latestKey})`;
+        saveState(true);
+        renderCurrentPage();
+        if (!silent) showToast('הנתונים, הרצף ומחברת החידושים סונכרנו מהענן! 🎉');
+      } catch (e) {
+        state.syncStatusMsg = 'לא ניתן היה למשוך מהענן כעת';
+        if (state.currentPage === 'settings') renderCurrentPage();
+        if (!silent) showToast('לא נמצא גיבוי או שאין חיבור רשת כרגע');
+      }
+    }
+
+    function copyMagicSyncLink() {
+      if (!state.syncUserId) return;
+      const baseUrl = window.location.href.split('?')[0];
+      const magicUrl = `${baseUrl}?sync=${encodeURIComponent(state.syncUserId)}`;
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(magicUrl).then(() => {
+          showToast('הקישור האישי הועתק! שלח אותו לטלפון החדש שלך 🔗');
+        }).catch(() => {
+          prompt('העתק את הקישור האישי שלך:', magicUrl);
+        });
+      } else {
+        prompt('העתק את הקישור האישי שלך:', magicUrl);
+      }
+    }
+
+    function exportBackupJsonFile() {
+      const dataStr = JSON.stringify(buildSyncPayload(), null, 2);
+      const blob = new Blob([dataStr], { type: 'application/json;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `limud-yomi-backup-${toDateKey(new Date())}.json`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      showToast('קובץ הגיבוי (.json) הורד למכשיר שלך 📥');
+    }
+
+    function importBackupJsonFile(event) {
+      const file = event.target.files?.[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        try {
+          const parsed = JSON.parse(e.target.result);
+          mergeCloudPayload(parsed);
+          saveState();
+          renderCurrentPage();
+          showToast('הגיבוי שוחזר ומוזג בהצלחה! 🎉');
+        } catch (_) {
+          showToast('קובץ הגיבוי אינו תקין');
+        }
+      };
+      reader.readAsText(file);
+    }
+
     // אתחול ראשוני
     loadState();
     tryFetchSefariaCalendar(state.selectedDateStr);
+    startReminderDaemon();
     renderCurrentPage();
+    if (state.syncUserId) {
+      pullStateFromCloud(true);
+    }
   </script>
   <script>
     if ('serviceWorker' in navigator) {
