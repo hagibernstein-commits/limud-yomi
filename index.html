@@ -284,6 +284,11 @@
       [104, 105], [106, 107], [108, 112], [113, 118], [119, 119], [119, 119], [120, 134], [135, 139], [140, 144], [145, 150]
     ];
 
+    // ==================== נתוני מבנה הספרים (מסכתות, פרקים) - מתוך Sefaria ====================
+    const GEMARA_DATA = [["Berakhot","ברכות",2,125],["Shabbat","שבת",2,312],["Eruvin","עירובין",2,207],["Pesachim","פסחים",2,240],["Rosh_Hashanah","ראש השנה",2,67],["Yoma","יומא",2,173],["Sukkah","סוכה",2,110],["Beitzah","ביצה",2,78],["Taanit","תענית",2,59],["Megillah","מגילה",2,61],["Moed_Katan","מועד קטן",2,55],["Chagigah","חגיגה",2,51],["Yevamot","יבמות",2,242],["Ketubot","כתובות",2,222],["Nedarim","נדרים",2,180],["Nazir","נזיר",2,130],["Sotah","סוטה",2,96],["Gittin","גיטין",2,178],["Kiddushin","קידושין",2,162],["Bava_Kamma","בבא קמא",2,236],["Bava_Metzia","בבא מציעא",2,235],["Bava_Batra","בבא בתרא",2,350],["Sanhedrin","סנהדרין",2,224],["Makkot","מכות",2,46],["Shevuot","שבועות",2,96],["Avodah_Zarah","עבודה זרה",2,150],["Horayot","הוריות",2,25],["Zevachim","זבחים",2,238],["Menachot","מנחות",2,217],["Chullin","חולין",2,281],["Bekhorot","בכורות",2,119],["Arakhin","ערכין",2,65],["Temurah","תמורה",2,65],["Keritot","כריתות",2,54],["Meilah","מעילה",2,41],["Tamid","תמיד",49,17],["Niddah","נדה",2,143]]; // [ref, שם, אינדקס עמוד ראשון (דף*2-2+צד), מספר עמודים]
+    const MISHNAH_DATA = [["Mishnah_Berakhot","ברכות","Seder Zeraim",[5,8,6,7,5,8,5,8,5]],["Mishnah_Peah","פאה","Seder Zeraim",[6,8,8,11,8,11,8,9]],["Mishnah_Demai","דמאי","Seder Zeraim",[4,5,6,7,11,12,8]],["Mishnah_Kilayim","כלאים","Seder Zeraim",[9,11,7,9,8,9,8,6,10]],["Mishnah_Sheviit","שביעית","Seder Zeraim",[8,10,10,10,9,6,7,11,9,9]],["Mishnah_Terumot","תרומות","Seder Zeraim",[10,6,9,13,9,6,7,12,7,12,10]],["Mishnah_Maasrot","מעשרות","Seder Zeraim",[8,8,10,6,8]],["Mishnah_Maaser_Sheni","מעשר שני","Seder Zeraim",[7,10,13,12,15]],["Mishnah_Challah","חלה","Seder Zeraim",[9,8,10,11]],["Mishnah_Orlah","ערלה","Seder Zeraim",[9,17,9]],["Mishnah_Bikkurim","ביכורים","Seder Zeraim",[11,11,12,5]],["Mishnah_Shabbat","שבת","Seder Moed",[11,7,6,2,4,10,4,7,7,6,6,6,7,4,3,8,8,3,6,5,3,6,5,5]],["Mishnah_Eruvin","עירובין","Seder Moed",[10,6,9,11,9,10,11,11,4,15]],["Mishnah_Pesachim","פסחים","Seder Moed",[7,8,8,9,10,6,13,8,11,9]],["Mishnah_Shekalim","שקלים","Seder Moed",[7,5,4,9,6,6,7,8]],["Mishnah_Yoma","יומא","Seder Moed",[8,7,11,6,7,8,5,9]],["Mishnah_Sukkah","סוכה","Seder Moed",[11,9,15,10,8]],["Mishnah_Beitzah","ביצה","Seder Moed",[10,10,8,7,7]],["Mishnah_Rosh_Hashanah","ראש השנה","Seder Moed",[9,9,8,9]],["Mishnah_Ta'anit","תענית","Seder Moed",[7,10,9,8]],["Mishnah_Megillah","מגילה","Seder Moed",[11,6,6,10]],["Mishnah_Moed_Katan","מועד קטן","Seder Moed",[10,5,9]],["Mishnah_Chagigah","חגיגה","Seder Moed",[8,7,8]],["Mishnah_Yevamot","יבמות","Seder Nashim",[4,10,10,13,6,6,6,6,6,9,7,6,13,9,10,7]],["Mishnah_Ketubot","כתובות","Seder Nashim",[10,10,9,12,9,7,10,8,9,6,6,4,11]],["Mishnah_Nedarim","נדרים","Seder Nashim",[4,5,11,8,6,10,9,7,10,8,12]],["Mishnah_Nazir","נזיר","Seder Nashim",[7,10,7,7,7,11,4,2,5]],["Mishnah_Sotah","סוטה","Seder Nashim",[9,6,8,5,5,4,8,7,15]],["Mishnah_Gittin","גיטין","Seder Nashim",[6,7,8,9,9,7,9,10,10]],["Mishnah_Kiddushin","קידושין","Seder Nashim",[10,10,13,14]],["Mishnah_Bava_Kamma","בבא קמא","Seder Nezikin",[4,6,11,9,7,6,7,7,12,10]],["Mishnah_Bava_Metzia","בבא מציעא","Seder Nezikin",[8,11,12,12,11,8,11,9,13,6]],["Mishnah_Bava_Batra","בבא בתרא","Seder Nezikin",[6,14,8,9,11,8,4,8,10,8]],["Mishnah_Sanhedrin","סנהדרין","Seder Nezikin",[6,5,8,5,5,6,11,7,6,6,6]],["Mishnah_Makkot","מכות","Seder Nezikin",[10,8,16]],["Mishnah_Shevuot","שבועות","Seder Nezikin",[7,5,11,13,5,7,8,6]],["Mishnah_Eduyot","עדיות","Seder Nezikin",[14,10,12,12,7,3,9,7]],["Mishnah_Avodah_Zarah","עבודה זרה","Seder Nezikin",[9,7,10,12,12]],["Pirkei_Avot","אבות","Seder Nezikin",[18,16,18,22,23,11]],["Mishnah_Horayot","הוריות","Seder Nezikin",[5,7,8]],["Mishnah_Zevachim","זבחים","Seder Kodashim",[4,5,6,6,8,7,6,12,7,8,8,6,8,10]],["Mishnah_Menachot","מנחות","Seder Kodashim",[4,5,7,5,9,7,6,7,9,9,9,5,11]],["Mishnah_Chullin","חולין","Seder Kodashim",[7,10,7,7,5,7,6,6,8,4,2,5]],["Mishnah_Bekhorot","בכורות","Seder Kodashim",[7,9,4,10,6,12,7,10,8]],["Mishnah_Arakhin","ערכין","Seder Kodashim",[4,6,5,4,6,5,5,7,8]],["Mishnah_Temurah","תמורה","Seder Kodashim",[6,3,5,4,6,5,6]],["Mishnah_Keritot","כריתות","Seder Kodashim",[7,6,10,3,8,9]],["Mishnah_Meilah","מעילה","Seder Kodashim",[4,9,8,6,5,6]],["Mishnah_Tamid","תמיד","Seder Kodashim",[4,5,9,3,6,3,4]],["Mishnah_Middot","מדות","Seder Kodashim",[9,6,8,7,4]],["Mishnah_Kinnim","קינים","Seder Kodashim",[4,5,6]],["Mishnah_Kelim","כלים","Seder Tahorot",[9,8,8,4,11,4,6,11,8,8,9,8,8,8,6,8,17,9,10,7,3,10,5,17,9,9,12,10,8,4]],["Mishnah_Oholot","אהלות","Seder Tahorot",[8,7,7,3,7,7,6,6,16,7,9,8,6,7,10,5,5,10]],["Mishnah_Negaim","נגעים","Seder Tahorot",[6,5,8,11,5,8,5,10,3,10,12,7,12,13]],["Mishnah_Parah","פרה","Seder Tahorot",[4,5,11,4,9,5,12,11,9,6,9,11]],["Mishnah_Tahorot","טהרות","Seder Tahorot",[9,8,8,13,9,10,9,9,9,8]],["Mishnah_Mikvaot","מקואות","Seder Tahorot",[8,10,4,5,6,11,7,5,7,8]],["Mishnah_Niddah","נדה","Seder Tahorot",[7,7,7,7,9,14,5,4,11,8]],["Mishnah_Makhshirin","מכשירין","Seder Tahorot",[6,11,8,10,11,8]],["Mishnah_Zavim","זבים","Seder Tahorot",[6,4,3,7,12]],["Mishnah_Tevul_Yom","טבול יום","Seder Tahorot",[5,8,6,7]],["Mishnah_Yadayim","ידים","Seder Tahorot",[5,4,5,8]],["Mishnah_Oktzin","עוקצים","Seder Tahorot",[6,10,12]]]; // [ref, שם, סדר, משניות בכל פרק]
+    const NACH_DATA = [["Joshua","יהושע","נביאים",24],["Judges","שופטים","נביאים",21],["I_Samuel","שמואל א","נביאים",31],["II_Samuel","שמואל ב","נביאים",24],["I_Kings","מלכים א","נביאים",22],["II_Kings","מלכים ב","נביאים",25],["Isaiah","ישעיהו","נביאים",66],["Jeremiah","ירמיהו","נביאים",52],["Ezekiel","יחזקאל","נביאים",48],["Hosea","הושע","נביאים",14],["Joel","יואל","נביאים",4],["Amos","עמוס","נביאים",9],["Obadiah","עובדיה","נביאים",1],["Jonah","יונה","נביאים",4],["Micah","מיכה","נביאים",7],["Nahum","נחום","נביאים",3],["Habakkuk","חבקוק","נביאים",3],["Zephaniah","צפניה","נביאים",3],["Haggai","חגי","נביאים",2],["Zechariah","זכריה","נביאים",14],["Malachi","מלאכי","נביאים",3],["Proverbs","משלי","כתובים",31],["Job","איוב","כתובים",42],["Song_of_Songs","שיר השירים","כתובים",8],["Ruth","רות","כתובים",4],["Lamentations","איכה","כתובים",5],["Ecclesiastes","קהלת","כתובים",12],["Esther","אסתר","כתובים",10],["Daniel","דניאל","כתובים",12],["Ezra","עזרא","כתובים",10],["Nehemiah","נחמיה","כתובים",13],["I_Chronicles","דברי הימים א","כתובים",29],["II_Chronicles","דברי הימים ב","כתובים",36]]; // [ref, שם, קבוצה, פרקים]
+
     // ==================== 2. קטלוג 18 מסלולי הלימוד והספרים ====================
     const DEFAULT_TRACKS = [
       {
@@ -773,6 +778,157 @@
       }
     ];
 
+
+    // ==================== בחירת מסכת / פרקים / דף או עמוד ====================
+    const SEDER_HE = { 'Seder Zeraim': 'זרעים', 'Seder Moed': 'מועד', 'Seder Nashim': 'נשים', 'Seder Nezikin': 'נזיקין', 'Seder Kodashim': 'קדשים', 'Seder Tahorot': 'טהרות' };
+    const SEDER_ID = { 'Seder Zeraim': 'zeraim', 'Seder Moed': 'moed', 'Seder Nashim': 'nashim', 'Seder Nezikin': 'nezikin', 'Seder Kodashim': 'kodashim', 'Seder Tahorot': 'taharot' };
+
+    function gemaraDafCount(g) {
+      const firstDaf = Math.floor(g[2] / 2) + 1;
+      const lastDaf = Math.floor((g[2] + g[3] - 1) / 2) + 1;
+      return lastDaf - firstDaf + 1;
+    }
+
+    function enrichTracks() {
+      const gem = DEFAULT_TRACKS.find(t => t.id === 'gemara_bavli');
+      if (gem) {
+        const all = gem.subBooks.find(s => s.id === 'shas_all');
+        gem.subBooks = [Object.assign({}, all, { name: 'הדף היומי העולמי / כל הש"ס ברצף', kind: 'gemara', gAll: true })];
+        GEMARA_DATA.forEach((g, i) => {
+          gem.subBooks.push({ id: g[0].toLowerCase(), name: 'מסכת ' + g[1], units: g[3], ref: g[0], kind: 'gemara', gIdx: i });
+        });
+      }
+      const mis = DEFAULT_TRACKS.find(t => t.id === 'mishna_yomit');
+      if (mis) {
+        const sedarim = {};
+        MISHNAH_DATA.forEach((m, i) => { (sedarim[m[2]] = sedarim[m[2]] || []).push(i); });
+        const total = MISHNAH_DATA.reduce((a, m) => a + m[3].length, 0);
+        const sb = [{ id: 'shas_mishna', name: 'כל ש"ס משניות (' + total + ' פרקים)', units: total, ref: 'Mishnah_Berakhot', kind: 'mishnah', mIdx: MISHNAH_DATA.map((m, i) => i), group: 'כללי' }];
+        Object.keys(SEDER_ID).forEach(sd => {
+          const idxs = sedarim[sd] || [];
+          const u = idxs.reduce((a, i) => a + MISHNAH_DATA[i][3].length, 0);
+          sb.push({ id: SEDER_ID[sd], name: 'סדר ' + SEDER_HE[sd] + ' (' + u + ' פרקים)', units: u, ref: MISHNAH_DATA[idxs[0]][0], kind: 'mishnah', mIdx: idxs, group: 'כללי' });
+        });
+        MISHNAH_DATA.forEach((m, i) => {
+          sb.push({ id: 'm_' + m[0].replace('Mishnah_', '').toLowerCase(), name: 'משנה ' + m[1] + ' (' + m[3].length + ' פרקים)', units: m[3].length, ref: m[0], kind: 'mishnah', mIdx: [i], group: 'סדר ' + (SEDER_HE[m[2]] || '') });
+        });
+        mis.subBooks = sb;
+      }
+      const nach = DEFAULT_TRACKS.find(t => t.id === 'nach_yomi');
+      if (nach) {
+        N_BOOKS_ADD(nach);
+      }
+    }
+    function N_BOOKS_ADD(nach) {
+      NACH_DATA.forEach(n => {
+        nach.subBooks.push({ id: 'nb_' + n[0].toLowerCase(), name: 'ספר ' + n[1] + ' (' + n[3] + ' פרקים)', units: n[3], ref: n[0], kind: 'chapters', group: n[2] });
+      });
+    }
+    enrichTracks();
+
+    // ---- יחידות לימוד בגמרא: דף או עמוד ----
+    function isAmud(track) { return track.id === 'gemara_bavli' && track.pace && track.pace.gemaraUnit === 'amud'; }
+
+    function syncUnitNames(track) {
+      if (track.id !== 'gemara_bavli') return;
+      if (isAmud(track)) { track.unitSingular = 'עמוד'; track.unitPlural = 'עמודים'; track.minutesPerUnit = 18; }
+      else { track.unitSingular = 'דף'; track.unitPlural = 'דפים'; track.minutesPerUnit = 35; }
+    }
+
+    // רשימת היחידות המלאה של ספר: לגמרא - עמודים/דפים, למשנה - פרקים
+    function gemaraUnitAt(sb, amud, k) {
+      // מחזיר {g: מסכת, daf, side} ליחידה מספר k (0-based) בתוך הספר
+      const list = sb.gAll ? GEMARA_DATA.map((g, i) => i) : [sb.gIdx];
+      for (const gi of list) {
+        const g = GEMARA_DATA[gi];
+        const cnt = amud ? g[3] : gemaraDafCount(g);
+        if (k < cnt) {
+          if (amud) {
+            const ai = g[2] + k;
+            return { g, daf: Math.floor(ai / 2) + 1, side: ai % 2 === 0 ? 'a' : 'b' };
+          }
+          const firstDaf = Math.floor(g[2] / 2) + 1;
+          const daf = firstDaf + k;
+          const firstAi = daf * 2 - 2, lastAi = g[2] + g[3] - 1;
+          const hasA = firstAi >= g[2];
+          const hasB = firstAi + 1 <= lastAi;
+          return { g, daf, side: hasA ? 'a' : 'b', hasA, hasB };
+        }
+        k -= cnt;
+      }
+      const g = GEMARA_DATA[list[list.length - 1]];
+      return { g, daf: Math.floor(g[2] / 2) + 1, side: 'a', hasA: true, hasB: true };
+    }
+
+    function mishnahUnitAt(sb, k) {
+      for (const mi of sb.mIdx) {
+        const m = MISHNAH_DATA[mi];
+        if (k < m[3].length) return { m, ch: k + 1 };
+        k -= m[3].length;
+      }
+      const m = MISHNAH_DATA[sb.mIdx[sb.mIdx.length - 1]];
+      return { m, ch: m[3].length };
+    }
+
+    function sideHe(s) { return s === 'a' ? 'ע"א' : 'ע"ב'; }
+
+    function fullUnitsOf(track, sb) {
+      if (sb.kind === 'gemara') {
+        const amud = isAmud(track);
+        const list = sb.gAll ? GEMARA_DATA : [GEMARA_DATA[sb.gIdx]];
+        return list.reduce((a, g) => a + (amud ? g[3] : gemaraDafCount(g)), 0);
+      }
+      return sb.units;
+    }
+
+    // תווית קצרה ליחידה בודדת (עבור בחירת טווח); idx הוא 1-based
+    function unitLabelAt(track, sb, idx) {
+      if (sb.kind === 'gemara') {
+        const u = gemaraUnitAt(sb, isAmud(track), idx - 1);
+        const nm = sb.gAll ? u.g[1] + ' ' : '';
+        return isAmud(track) ? `${nm}דף ${toGematria(u.daf)} ${sideHe(u.side)}` : `${nm}דף ${toGematria(u.daf)}`;
+      }
+      if (sb.kind === 'mishnah') {
+        const u = mishnahUnitAt(sb, idx - 1);
+        return (sb.mIdx.length > 1 ? u.m[1] + ' ' : '') + 'פרק ' + toGematria(u.ch);
+      }
+      return track.unitSingular.split('/')[0] + ' ' + toGematria(idx);
+    }
+
+    // תווית וקישור ל-Sefaria לטווח יחידות מוחלט (1-based)
+    function portionForRange(track, sb, a, b) {
+      if (sb.kind === 'gemara') {
+        const amud = isAmud(track);
+        const ua = gemaraUnitAt(sb, amud, a - 1), ub = gemaraUnitAt(sb, amud, b - 1);
+        const same = ua.g === ub.g;
+        let label;
+        if (a === b) {
+          label = amud
+            ? `${ua.g[1]} – דף ${toGematria(ua.daf)} ${sideHe(ua.side)}`
+            : `${ua.g[1]} – דף ${toGematria(ua.daf)} ${ua.hasA && ua.hasB ? 'ע"א–ע"ב' : sideHe(ua.side)}`;
+        } else if (amud) {
+          label = `${ua.g[1]} דף ${toGematria(ua.daf)} ${sideHe(ua.side)} – ${same ? '' : ub.g[1] + ' '}דף ${toGematria(ub.daf)} ${sideHe(ub.side)}`;
+        } else {
+          label = `${ua.g[1]} – דפים ${toGematria(ua.daf)}–${same ? '' : ub.g[1] + ' '}${toGematria(ub.daf)}`;
+        }
+        return { label, ref: `${ua.g[0]}.${ua.daf}${ua.side}` };
+      }
+      if (sb.kind === 'mishnah') {
+        const ua = mishnahUnitAt(sb, a - 1), ub = mishnahUnitAt(sb, b - 1);
+        let label;
+        if (a === b) label = `משנה ${ua.m[1]} – פרק ${toGematria(ua.ch)}`;
+        else if (ua.m === ub.m) label = `משנה ${ua.m[1]} – פרקים ${toGematria(ua.ch)}–${toGematria(ub.ch)}`;
+        else label = `משנה ${ua.m[1]} פרק ${toGematria(ua.ch)} – ${ub.m[1]} פרק ${toGematria(ub.ch)}`;
+        return { label, ref: `${ua.m[0]}.${ua.ch}` };
+      }
+      return null;
+    }
+
+    function resetPaceStart(track) {
+      track.pace.startDate = toDateKey(new Date());
+      track.pace.offset = 0;
+    }
+
     // ==================== 3. ניהול State, ערכת צבעים ו-localStorage ====================
     const STORAGE_KEY = 'limud_yomi_mobile_state_v3';
 
@@ -834,6 +990,7 @@
               pace: { ...def.pace, ...(saved.pace || {}) }
             };
           }).sort((a, b) => a.order - b.order);
+          state.tracks.forEach(syncUnitNames);
         } else {
           state.tracks = JSON.parse(JSON.stringify(DEFAULT_TRACKS)).map((t, i) => ({ ...t, order: i }));
         }
@@ -962,8 +1119,19 @@
     }
 
     // ==================== 4. חישוב המנה היומית וקצב סיום ====================
-    function getSelectedSubBook(track) {
+    function getBaseSubBook(track) {
       return track.subBooks.find(sb => sb.id === track.pace.subBookId) || track.subBooks[0];
+    }
+
+    // הספר הנבחר כולל טווח (מ-עד) ויחידה (דף/עמוד): units = אורך הטווח
+    function getSelectedSubBook(track) {
+      const base = getBaseSubBook(track);
+      const full = fullUnitsOf(track, base);
+      let from = parseInt(track.pace.rangeFrom, 10) || 1;
+      let to = parseInt(track.pace.rangeTo, 10) || full;
+      from = Math.min(Math.max(1, from), full);
+      to = Math.min(Math.max(from, to), full);
+      return Object.assign({}, base, { units: to - from + 1, fullUnits: full, rangeFrom: from, rangeTo: to });
     }
 
     function countActiveDaysBetween(startStr, endStr, excludeFriday, excludeShabbat) {
@@ -1026,12 +1194,14 @@
       let sefariaRef = `${subBook.ref}.${startUnit}`;
 
       const calCache = state.sefariaCalendarCache[dateStr] || [];
-      const liveItem = (p.mode === 'global' && track.sefariaCalendarTitle)
+      const calendarBook = !(track.id === 'gemara_bavli' || track.id === 'mishna_yomit') ||
+        ((subBook.id === 'shas_all' || subBook.id === 'shas_mishna') && subBook.rangeFrom === 1 && subBook.rangeTo === subBook.fullUnits && !isAmud(track));
+      const liveItem = (p.mode === 'global' && track.sefariaCalendarTitle && calendarBook)
         ? calCache.find(c => (c.title?.en || '').toLowerCase() === track.sefariaCalendarTitle.toLowerCase())
         : null;
 
       if (isReviewDay) {
-        portionLabel = `יום חזרה ושינון שבועי (עד ${track.unitSingular} ${toGematria(startUnit)})`;
+        portionLabel = `יום חזרה ושינון שבועי (עד ${track.unitSingular} ${toGematria((subBook.rangeFrom || 1) - 1 + startUnit)})`;
       } else if (liveItem && liveItem.displayValue?.he) {
         portionLabel = liveItem.displayValue.he;
         sefariaRef = liveItem.ref || sefariaRef;
@@ -1050,17 +1220,19 @@
         }
       } else if (track.id === 'chok_leisrael') {
         portionLabel = `פרשת ${parasha} – ${getDayOfWeekHe(dateObj)}`;
-      } else if (track.id === 'gemara_bavli') {
-        const dafNum = Math.max(2, (startUnit % 150) + 2);
-        const masechetName = subBook.id === 'shas_all' ? 'דף יומי' : subBook.name.split('(')[0].trim();
-        portionLabel = `${masechetName} – דף ${toGematria(dafNum)} ע"א–ע"ב`;
-        sefariaRef = `${subBook.ref}.${dafNum}a`;
+      } else if (subBook.kind === 'gemara' || subBook.kind === 'mishnah') {
+        const pr = portionForRange(track, subBook, subBook.rangeFrom - 1 + startUnit, subBook.rangeFrom - 1 + endUnit);
+        portionLabel = pr.label;
+        sefariaRef = pr.ref;
       } else {
         const bookShort = subBook.name.split('(')[0].trim();
+        const absStart = (subBook.rangeFrom || 1) - 1 + startUnit;
+        const absEnd = (subBook.rangeFrom || 1) - 1 + endUnit;
+        sefariaRef = `${subBook.ref}.${absStart}`;
         if (endUnit > startUnit) {
-          portionLabel = `${bookShort} • ${track.unitPlural} ${toGematria(startUnit)}–${toGematria(endUnit)}`;
+          portionLabel = `${bookShort} • ${track.unitPlural} ${toGematria(absStart)}–${toGematria(absEnd)}`;
         } else {
-          portionLabel = `${bookShort} • ${track.unitSingular} ${toGematria(startUnit)}`;
+          portionLabel = `${bookShort} • ${track.unitSingular} ${toGematria(absStart)}`;
         }
       }
 
@@ -1518,13 +1690,23 @@
             </div>
 
             <div class="space-y-2 pt-1">
-              <label class="text-xs font-bold app-text-muted block">בחר כרך / מסכת ספציפית מתוך "${track.titleHe}":</label>
+              <label class="text-xs font-bold app-text-muted block">בחר ${track.id === 'gemara_bavli' ? 'מסכת' : track.id === 'mishna_yomit' ? 'סדר או מסכת' : 'כרך / ספר'} מתוך "${track.titleHe}":</label>
               <select onchange="updatePlannerSubBook(this.value)" class="w-full rounded-2xl p-3.5 text-sm font-bold app-card-alt focus:outline-none">
-                ${track.subBooks.map(sb => `
-                  <option value="${sb.id}" ${sb.id === p.subBookId ? 'selected' : ''}>${sb.name}</option>
-                `).join('')}
+                ${renderSubBookOptions(track, p)}
               </select>
             </div>
+
+            ${track.id === 'gemara_bavli' ? `
+              <div class="space-y-2 pt-1">
+                <label class="text-xs font-bold app-text-muted block">יחידת לימוד יומית:</label>
+                <div class="grid grid-cols-2 gap-2">
+                  <button onclick="setGemaraUnit('daf')" class="py-3 rounded-2xl font-extrabold text-sm ${!isAmud(track) ? 'app-btn-primary' : 'app-btn-secondary'}">📜 דף (ע"א + ע"ב)</button>
+                  <button onclick="setGemaraUnit('amud')" class="py-3 rounded-2xl font-extrabold text-sm ${isAmud(track) ? 'app-btn-primary' : 'app-btn-secondary'}">📄 עמוד אחד</button>
+                </div>
+              </div>
+            ` : ''}
+
+            ${renderRangePicker(track, subBook)}
           </section>
 
           <!-- שלב 2: בחירת שיטת החישוב (4 כפתורי ענק ברורים) -->
@@ -1572,12 +1754,12 @@
                   `).join('')}
                 </div>
                 <div class="app-card-alt rounded-2xl p-3 flex items-center justify-between gap-2">
-                  <button onclick="setPlannerTargetDays(Math.max(5, (p.targetDays || 90) - 10))" class="w-12 h-11 rounded-xl app-card font-extrabold text-lg">-10</button>
+                  <button onclick="setPlannerTargetDays(${Math.max(5, (p.targetDays || 90) - 10)})" class="w-12 h-11 rounded-xl app-card font-extrabold text-lg">-10</button>
                   <div class="text-center">
                     <div class="text-lg font-extrabold">${p.targetDays} ימים</div>
                     <div class="text-xs app-text-muted">מותאם אישית</div>
                   </div>
-                  <button onclick="setPlannerTargetDays((p.targetDays || 90) + 10)" class="w-12 h-11 rounded-xl app-card font-extrabold text-lg">+10</button>
+                  <button onclick="setPlannerTargetDays(${(p.targetDays || 90) + 10})" class="w-12 h-11 rounded-xl app-card font-extrabold text-lg">+10</button>
                 </div>
               </div>
             ` : ''}
@@ -1633,7 +1815,7 @@
               </div>
               <div class="flex justify-between">
                 <span class="app-text-muted">היקף כולל:</span>
-                <span class="font-bold">${subBook.units} ${track.unitPlural}</span>
+                <span class="font-bold">${subBook.units} ${track.unitPlural}${subBook.units < subBook.fullUnits ? ` (${unitLabelAt(track, subBook, subBook.rangeFrom)} עד ${unitLabelAt(track, subBook, subBook.rangeTo)})` : ''}</span>
               </div>
               <div class="flex justify-between">
                 <span class="app-text-muted">קצב יומי נדרש:</span>
@@ -2144,10 +2326,86 @@
       renderCurrentPage();
     }
 
+    function renderSubBookOptions(track, p) {
+      const groups = [];
+      track.subBooks.forEach(sb => {
+        const g = sb.group || '';
+        let grp = groups.find(x => x.g === g);
+        if (!grp) { grp = { g, items: [] }; groups.push(grp); }
+        grp.items.push(sb);
+      });
+      return groups.map(grp => {
+        const opts = grp.items.map(sb => `<option value="${sb.id}" ${sb.id === p.subBookId ? 'selected' : ''}>${sb.name}</option>`).join('');
+        return grp.g ? `<optgroup label="${grp.g}">${opts}</optgroup>` : opts;
+      }).join('');
+    }
+
+    function renderRangePicker(track, subBook) {
+      if (subBook.gAll || subBook.fullUnits < 2) return '';
+      const full = subBook.fullUnits;
+      const labelled = subBook.kind === 'gemara' || subBook.kind === 'mishnah' || subBook.kind === 'chapters' || full <= 400;
+      if (!labelled) return '';
+      const mk = (sel) => {
+        let out = '';
+        for (let i = 1; i <= full; i++) out += `<option value="${i}" ${i === sel ? 'selected' : ''}>${unitLabelAt(track, subBook, i)}</option>`;
+        return out;
+      };
+      const isFull = subBook.rangeFrom === 1 && subBook.rangeTo === full;
+      return `
+        <div class="space-y-2 pt-1">
+          <label class="text-xs font-bold app-text-muted block">טווח לימוד (רשות) - ${isFull ? 'כרגע: הכול' : 'כרגע: ' + subBook.units + ' ' + track.unitPlural}:</label>
+          <div class="grid grid-cols-2 gap-2">
+            <div>
+              <div class="text-[11px] font-bold app-text-muted mb-1">מ:</div>
+              <select onchange="setPlannerRange('from', this.value)" class="w-full rounded-2xl p-3 text-sm font-bold app-card-alt focus:outline-none">${mk(subBook.rangeFrom)}</select>
+            </div>
+            <div>
+              <div class="text-[11px] font-bold app-text-muted mb-1">עד:</div>
+              <select onchange="setPlannerRange('to', this.value)" class="w-full rounded-2xl p-3 text-sm font-bold app-card-alt focus:outline-none">${mk(subBook.rangeTo)}</select>
+            </div>
+          </div>
+          ${isFull ? '' : `<button onclick="setPlannerRange('all', 0)" class="w-full py-2.5 rounded-2xl app-btn-secondary font-bold text-xs">נקה טווח - כל הספר</button>`}
+        </div>`;
+    }
+
+    function setPlannerRange(which, val) {
+      const track = state.tracks.find(t => t.id === state.plannerSelectedTrackId);
+      if (!track) return;
+      const sb = getSelectedSubBook(track);
+      let from = sb.rangeFrom, to = sb.rangeTo;
+      const v = parseInt(val, 10);
+      if (which === 'all') { from = 1; to = sb.fullUnits; }
+      if (which === 'from') { from = v; if (to < from) to = from; }
+      if (which === 'to') { to = v; if (from > to) from = to; }
+      track.pace.rangeFrom = from;
+      track.pace.rangeTo = to;
+      resetPaceStart(track);
+      saveState();
+      renderCurrentPage();
+      showToast('הטווח עודכן - הלימוד מתחיל מ' + unitLabelAt(track, sb, from));
+    }
+
+    function setGemaraUnit(unit) {
+      const track = state.tracks.find(t => t.id === 'gemara_bavli');
+      if (!track || track.pace.gemaraUnit === unit || (unit === 'daf' && !track.pace.gemaraUnit)) return;
+      track.pace.gemaraUnit = unit;
+      track.pace.rangeFrom = null;
+      track.pace.rangeTo = null;
+      track.pace.dailyUnits = 1;
+      resetPaceStart(track);
+      syncUnitNames(track);
+      saveState();
+      renderCurrentPage();
+      showToast(unit === 'amud' ? 'הלימוד היומי: עמוד אחד 📄' : 'הלימוד היומי: דף שלם 📜');
+    }
+
     function updatePlannerSubBook(subBookId) {
       const track = state.tracks.find(t => t.id === state.plannerSelectedTrackId);
       if (!track) return;
       track.pace.subBookId = subBookId;
+      track.pace.rangeFrom = null;
+      track.pace.rangeTo = null;
+      resetPaceStart(track);
       saveState();
       renderCurrentPage();
       showToast('הכרך / המסכת עודכנו בהצלחה 📖');
@@ -2610,6 +2868,7 @@
             pace: { ...t.pace, ...(ct.pace || {}) }
           };
         }).sort((a, b) => a.order - b.order);
+        state.tracks.forEach(syncUnitNames);
       }
 
       if (cloud.themeMode) state.themeMode = cloud.themeMode;
