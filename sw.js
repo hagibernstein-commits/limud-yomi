@@ -5,10 +5,10 @@ const APP_SHELL = [
   './index.html',
   './manifest.webmanifest',
   './icon-192.png',
-  './icon-512.png',
-  './vendor/tailwind.js',
-  './vendor/tailwindcss.min.js'
+  './icon-512.png'
 ];
+
+const RUNTIME_CACHE_HOSTS = ['cdn.tailwindcss.com', 'www.gstatic.com'];
 
 self.addEventListener('install', (event) => {
   event.waitUntil(
@@ -28,6 +28,20 @@ self.addEventListener('fetch', (event) => {
   const req = event.request;
   if (req.method !== 'GET') return;
   const url = new URL(req.url);
+
+  // CDN סקריפטים (Tailwind) - מטמון לאחר הטעינה הראשונה כדי שהאפליקציה תעבוד אופליין
+  if (RUNTIME_CACHE_HOSTS.includes(url.hostname)) {
+    event.respondWith(
+      caches.open(CACHE_NAME).then(async (cache) => {
+        const hit = await cache.match(req);
+        if (hit) return hit;
+        const resp = await fetch(req);
+        if (resp.ok || resp.type === 'opaque') cache.put(req, resp.clone());
+        return resp;
+      })
+    );
+    return;
+  }
 
   // קריאות חיצוניות (למשל Sefaria) - רשת בלבד; האפליקציה כבר יודעת להתמודד עם כשל אופליין
   if (url.origin !== self.location.origin) return;
