@@ -1,0 +1,19 @@
+{
+  "name": "הלימוד היומי שלי",
+  "short_name": "הלימוד היומי",
+  "description": "מעקב אחר הלימוד היומי: דף יומי, משנה יומית, תנ״ך יומי, רמב״ם, תניא ועוד, עם תזכורות ומחברת חידושים.",
+  "lang": "he",
+  "dir": "rtl",
+  "start_url": "./app.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#1B3A6B",
+  "theme_color": "#1B3A6B",
+  "icons": [
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icon-maskable-192.png", "sizes": "192x192", "type": "image/png", "purpose": "maskable" },
+    { "src": "icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}

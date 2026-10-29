@@ -1,0 +1,2204 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="theme-color" content="#1B3A6B">
+  <link rel="manifest" href="manifest.webmanifest">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="הלימוד היומי">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='22' fill='%231B3A6B'/><text y='.9em' x='50%' text-anchor='middle' font-size='65'>📖</text></svg>">
+  <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='22' fill='%231B3A6B'/><text y='.9em' x='50%' text-anchor='middle' font-size='65'>📖</text></svg>">
+  <title>הלימוד היומי שלי</title>
+  <script src="vendor/tailwind.js"></script>
+  <script src="vendor/tailwindcss.min.js"></script>
+  <style>
+    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+    .no-scrollbar::-webkit-scrollbar { display: none; }
+    .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+    /* ערכות צבעים מוגדרות על מעטפת האפליקציה לתגובה מיידית וברורה */
+    .app-theme-light {
+      --app-bg: #F6F4EE;
+      --app-surface: #FFFFFF;
+      --app-surface-alt: #EDE9DF;
+      --app-text: #14213D;
+      --app-text-muted: #526077;
+      --app-border: #D8D2C5;
+      --app-primary: #1B3A6B;
+      --app-primary-fg: #FFFFFF;
+      --app-accent: #C59B27;
+      --app-accent-soft: rgba(197, 155, 39, 0.16);
+      --app-success: #15803D;
+      --app-success-soft: rgba(21, 128, 61, 0.14);
+      --app-danger: #B91C1C;
+    }
+
+    .app-theme-dark {
+      --app-bg: #0B1120;
+      --app-surface: #172033;
+      --app-surface-alt: #23304A;
+      --app-text: #F8FAFC;
+      --app-text-muted: #94A3B8;
+      --app-border: #2E3D59;
+      --app-primary: #EAB308;
+      --app-primary-fg: #0F172A;
+      --app-accent: #38BDF8;
+      --app-accent-soft: rgba(56, 189, 248, 0.16);
+      --app-success: #22C55E;
+      --app-success-soft: rgba(34, 197, 94, 0.18);
+      --app-danger: #EF4444;
+    }
+
+    .app-shell {
+      background-color: var(--app-bg);
+      color: var(--app-text);
+      transition: background-color 0.25s ease, color 0.25s ease;
+    }
+
+    .app-card {
+      background-color: var(--app-surface);
+      color: var(--app-text);
+      border: 1.5px solid var(--app-border);
+      transition: all 0.2s ease;
+    }
+
+    .app-card-alt {
+      background-color: var(--app-surface-alt);
+      color: var(--app-text);
+      border: 1px solid var(--app-border);
+    }
+
+    .app-btn-primary {
+      background-color: var(--app-primary);
+      color: var(--app-primary-fg);
+      transition: transform 0.12s ease, opacity 0.15s ease;
+    }
+    .app-btn-primary:active {
+      transform: scale(0.97);
+    }
+
+    .app-btn-secondary {
+      background-color: var(--app-surface-alt);
+      color: var(--app-text);
+      border: 1.5px solid var(--app-border);
+      transition: transform 0.12s ease, background-color 0.15s ease;
+    }
+    .app-btn-secondary:active {
+      transform: scale(0.97);
+    }
+
+    .app-btn-success {
+      background-color: var(--app-success);
+      color: #FFFFFF;
+      transition: transform 0.12s ease;
+    }
+    .app-btn-success:active {
+      transform: scale(0.97);
+    }
+
+    .app-text-muted {
+      color: var(--app-text-muted);
+    }
+
+    @keyframes fadeInSlide {
+      from { opacity: 0; transform: translateY(6px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .page-animate {
+      animation: fadeInSlide 0.2s ease-out;
+    }
+  </style>
+</head>
+<body class="bg-[var(--background)] text-[var(--foreground)] antialiased select-none m-0 p-0">
+
+  <!-- מעטפת ראשית של האפליקציה לנייד -->
+  <div id="appRoot" class="app-shell app-theme-light max-w-md mx-auto min-h-screen flex flex-col shadow-2xl relative pb-24 border-x border-[var(--app-border)]">
+
+    <!-- התראת חיווי מהירה (Toast) -->
+    <div id="toastBanner" class="hidden fixed top-16 left-1/2 -translate-x-1/2 z-50 max-w-sm w-[90%] px-4 py-3 rounded-2xl shadow-xl font-bold text-sm text-center transition-all" style="background-color: var(--app-primary); color: var(--app-primary-fg);">
+      <span id="toastText"></span>
+    </div>
+
+    <!-- סרגל עליון קבוע וברור (Top App Bar) -->
+    <header class="sticky top-0 z-30 app-card border-t-0 border-x-0 px-4 py-3.5 flex items-center justify-between shadow-sm">
+      <div class="flex items-center gap-3">
+        <div class="w-11 h-11 rounded-2xl flex items-center justify-center text-2xl shadow-sm" style="background-color: var(--app-primary); color: var(--app-primary-fg);">
+          📖
+        </div>
+        <div>
+          <h1 id="topBarTitle" class="font-extrabold text-lg leading-tight">הלימוד היומי שלי</h1>
+          <p id="topBarSubtitle" class="app-text-muted text-xs font-medium mt-0.5">לוח לימוד יומי מותאם אישית</p>
+        </div>
+      </div>
+
+      <!-- כפתורים מהירים בראש האפליקציה: רצף ימים + החלפת ערכת צבעים -->
+      <div class="flex items-center gap-2">
+        <button onclick="navigateToPage('catchup')" class="px-3 py-2 rounded-xl app-btn-secondary flex items-center gap-1.5 text-xs font-bold" title="רצף ימי לימוד">
+          <span class="text-base">🔥</span>
+          <span id="headerStreakText">0</span>
+        </button>
+        <button onclick="cycleThemeQuick()" id="quickThemeBtn" class="px-3 py-2 rounded-xl app-btn-secondary flex items-center gap-1.5 text-xs font-bold" title="החלף ערכת צבעים (בהיר / כהה / אוטומטי)">
+          <span id="quickThemeIcon" class="text-base">☀️</span>
+          <span id="quickThemeLabel">בהיר</span>
+        </button>
+      </div>
+    </header>
+
+    <!-- אזור התוכן המרכזי - מציג דף ייעודי אחד בכל פעם -->
+    <main id="pageContainer" class="flex-1 px-4 py-4 space-y-4">
+      <!-- ירונדר דינמית לפי הדף הפעיל -->
+    </main>
+
+    <!-- סרגל ניווט תחתון גדול וברור בין 5 דפי האפליקציה -->
+    <nav id="bottomNavBar" class="fixed bottom-0 right-0 left-0 max-w-md mx-auto z-30 app-card border-b-0 border-x-0 px-2 py-2 grid grid-cols-5 gap-1 shadow-2xl">
+      <button onclick="navigateToPage('today')" id="navBtn-today" class="py-2 px-1 rounded-2xl flex flex-col items-center justify-center gap-1 transition-all">
+        <span class="text-xl">📅</span>
+        <span class="text-xs font-bold leading-none">היום</span>
+      </button>
+
+      <button onclick="navigateToPage('catalog')" id="navBtn-catalog" class="py-2 px-1 rounded-2xl flex flex-col items-center justify-center gap-1 transition-all">
+        <span class="text-xl">📚</span>
+        <span class="text-xs font-bold leading-none">ספרים</span>
+      </button>
+
+      <button onclick="navigateToPage('planner')" id="navBtn-planner" class="py-2 px-1 rounded-2xl flex flex-col items-center justify-center gap-1 transition-all">
+        <span class="text-xl">⏱️</span>
+        <span class="text-xs font-bold leading-none">קצב סיום</span>
+      </button>
+
+      <button onclick="navigateToPage('catchup')" id="navBtn-catchup" class="py-2 px-1 rounded-2xl flex flex-col items-center justify-center gap-1 transition-all relative">
+        <span class="text-xl">✍️</span>
+        <span class="text-xs font-bold leading-none">השלמות</span>
+        <span id="navMissedBadge" class="hidden absolute top-1 left-2 px-1.5 py-0.5 rounded-full text-xs font-extrabold" style="background-color: var(--app-danger); color: #fff;">0</span>
+      </button>
+
+      <button onclick="navigateToPage('settings')" id="navBtn-settings" class="py-2 px-1 rounded-2xl flex flex-col items-center justify-center gap-1 transition-all">
+        <span class="text-xl">🎨</span>
+        <span class="text-xs font-bold leading-none">עיצוב</span>
+      </button>
+    </nav>
+
+  </div>
+
+  <script>
+    // ==================== 1. עזרי גימטריה ולוח שנה עברי ====================
+    function toGematria(num) {
+      if (!num || num <= 0) return String(num);
+      let n = Math.floor(num);
+      const hundreds = ['', 'ק', 'ר', 'ש', 'ת', 'תק', 'תר', 'תש', 'תת', 'תתק'];
+      const tens = ['', 'י', 'כ', 'ל', 'מ', 'נ', 'ס', 'ע', 'פ', 'צ'];
+      const units = ['', 'א', 'ב', 'ג', 'ד', 'ה', 'ו', 'ז', 'ח', 'ט'];
+      let out = '';
+      if (n >= 1000) {
+        out += units[Math.floor(n / 1000) % 10] + '׳';
+        n %= 1000;
+      }
+      if (n >= 100) {
+        out += hundreds[Math.floor(n / 100)];
+        n %= 100;
+      }
+      if (n === 15) {
+        out += 'טו';
+      } else if (n === 16) {
+        out += 'טז';
+      } else {
+        if (n >= 10) {
+          out += tens[Math.floor(n / 10)];
+          n %= 10;
+        }
+        if (n > 0) {
+          out += units[n];
+        }
+      }
+      if (out.length === 1) return out + '׳';
+      if (out.length > 1 && !out.includes('"')) {
+        return out.slice(0, -1) + '"' + out.slice(-1);
+      }
+      return out;
+    }
+
+    function toDateKey(date) {
+      const y = date.getFullYear();
+      const m = String(date.getMonth() + 1).padStart(2, '0');
+      const d = String(date.getDate()).padStart(2, '0');
+      return `${y}-${m}-${d}`;
+    }
+
+    function formatDisplayGregorian(dateStr) {
+      const [y, m, d] = dateStr.split('-');
+      return `${d}/${m}/${y}`;
+    }
+
+    function getHebrewDateInfo(date) {
+      try {
+        const parts = new Intl.DateTimeFormat('he-IL-u-ca-hebrew', {
+          day: 'numeric',
+          month: 'long',
+          year: 'numeric'
+        }).formatToParts(date);
+        const dayNum = parseInt(parts.find(p => p.type === 'day')?.value || '1', 10);
+        const monthName = parts.find(p => p.type === 'month')?.value || 'חשוון';
+        const yearNum = parseInt(parts.find(p => p.type === 'year')?.value || '5787', 10);
+        const dayGematria = toGematria(dayNum);
+        const yearShort = toGematria(yearNum % 1000);
+        return {
+          dayOfMonth: dayNum,
+          monthName,
+          yearNum,
+          formatted: `${dayGematria} ב${monthName} ה׳${yearShort}`
+        };
+      } catch (e) {
+        return { dayOfMonth: 17, monthName: 'חשוון', yearNum: 5787, formatted: 'י"ז בחשוון ה׳תשפ"ז' };
+      }
+    }
+
+    function getDayOfWeekHe(date) {
+      const names = ['יום ראשון', 'יום שני', 'יום שלישי', 'יום רביעי', 'יום חמישי', 'יום שישי (ערב שבת)', 'שבת קודש'];
+      return names[date.getDay()];
+    }
+
+    const PARASHOT_LIST = [
+      'בראשית', 'נח', 'לך לך', 'וירא', 'חיי שרה', 'תולדות', 'ויצא', 'וישלח', 'וישב', 'מקץ', 'ויגש', 'ויחי',
+      'שמות', 'וארא', 'בא', 'בשלח', 'יתרו', 'משפטים', 'תרומה', 'תצוה', 'כי תשא', 'ויקהל-פקודי',
+      'ויקרא', 'צו', 'שמיני', 'תזריע-מצורע', 'אחרי מות-קדושים', 'אמור', 'בהר-בחוקותי',
+      'במדבר', 'נשא', 'בהעלותך', 'שלח', 'קרח', 'חקת', 'בלק', 'פינחס', 'מטות-מסעי',
+      'דברים', 'ואתחנן', 'עקב', 'ראה', 'שופטים', 'כי תצא', 'כי תבוא', 'נצבים-וילך', 'האזינו', 'וזאת הברכה'
+    ];
+
+    function getParashaForDate(date) {
+      const refSimchatTorah = new Date(2026, 9, 4);
+      const diffWeeks = Math.floor((date - refSimchatTorah) / (1000 * 60 * 60 * 24 * 7));
+      const idx = ((diffWeeks % PARASHOT_LIST.length) + PARASHOT_LIST.length) % PARASHOT_LIST.length;
+      return PARASHOT_LIST[idx];
+    }
+
+    const TEHILLIM_MONTHLY = [
+      [1, 9], [10, 17], [18, 22], [23, 28], [29, 34], [35, 38], [39, 43], [44, 48], [49, 54], [55, 59],
+      [60, 65], [66, 68], [69, 71], [72, 76], [77, 78], [79, 82], [83, 87], [88, 89], [90, 96], [97, 103],
+      [104, 105], [106, 107], [108, 112], [113, 118], [119, 119], [119, 119], [120, 134], [135, 139], [140, 144], [145, 150]
+    ];
+
+    // ==================== 2. קטלוג 18 מסלולי הלימוד והספרים ====================
+    const DEFAULT_TRACKS = [
+      {
+        id: 'gemara_bavli',
+        titleHe: 'גמרא – תלמוד בבלי',
+        category: 'גמרא ומשנה',
+        icon: '📜',
+        unitSingular: 'דף',
+        unitPlural: 'דפים',
+        minutesPerUnit: 35,
+        enabled: true,
+        isCore: true,
+        sefariaCalendarTitle: 'Daf Yomi',
+        subBooks: [
+          { id: 'shas_all', name: 'הדף היומי העולמי (כל הש"ס - 2,711 דפים)', units: 2711, ref: 'Berakhot' },
+          { id: 'berakhot', name: 'מסכת ברכות (64 דפים)', units: 64, ref: 'Berakhot' },
+          { id: 'shabbat', name: 'מסכת שבת (157 דפים)', units: 157, ref: 'Shabbat' },
+          { id: 'eruvin', name: 'מסכת עירובין (105 דפים)', units: 105, ref: 'Eruvin' },
+          { id: 'pesachim', name: 'מסכת פסחים (121 דפים)', units: 121, ref: 'Pesachim' },
+          { id: 'taanit', name: 'מסכת תענית (31 דפים)', units: 31, ref: 'Taanit' },
+          { id: 'megillah', name: 'מסכת מגילה (32 דפים)', units: 32, ref: 'Megillah' },
+          { id: 'sukkah', name: 'מסכת סוכה (56 דפים)', units: 56, ref: 'Sukkah' },
+          { id: 'bava_kamma', name: 'מסכת בבא קמא (119 דפים)', units: 119, ref: 'Bava_Kamma' },
+          { id: 'bava_metzia', name: 'מסכת בבא מציעא (119 דפים)', units: 119, ref: 'Bava_Metzia' },
+          { id: 'bava_batra', name: 'מסכת בבא בתרא (176 דפים)', units: 176, ref: 'Bava_Batra' },
+          { id: 'sanhedrin', name: 'מסכת סנהדרין (113 דפים)', units: 113, ref: 'Sanhedrin' },
+          { id: 'makkot', name: 'מסכת מכות (24 דפים)', units: 24, ref: 'Makkot' },
+          { id: 'kiddushin', name: 'מסכת קידושין (82 דפים)', units: 82, ref: 'Kiddushin' }
+        ],
+        pace: { subBookId: 'shas_all', mode: 'global', targetDays: 2711, dailyUnits: 1, excludeFriday: false, excludeShabbat: false, startDate: '2026-01-01', offset: 0 },
+        sampleVerses: [
+          'מאימתי קורין את שמע בערבין – משעה שהכהנים נכנסים לאכול בתרומתן עד סוף האשמורה הראשונה דברי רבי אליעזר, וחכמים אומרים עד חצות, רבן גמליאל אומר עד שיעלה עמוד השחר.',
+          'תניא רבי אליעזר אומר: שלש משמרות הוי הלילה, ועל כל משמר ומשמר יושב הקדוש ברוך הוא ושואג כארי, שנאמר: ה׳ ממרום ישאג וממעון קדשו יתן קולו.',
+          'אמר רבי יצחק: כל הקורא קריאת שמע על מטתו כאילו אוחז חרב של שתי פיות בידו, שנאמר: רוממות אל בגרונם וחרב פיפיות בידם.'
+        ],
+        sampleCommentaries: [
+          'רש"י: משעה שהכהנים נכנסים לאכול בתרומתן – כהנים שנטמאו וטבלו, אין אוכלין בתרומה עד שיעריב שמשן, דהיינו צאת הכוכבים.',
+          'תוספות: מאימתי קורין – פתח בערבית משום דכתיב בבריאת העולם "ויהי ערב ויהי בוקר יום אחד".'
+        ]
+      },
+      {
+        id: 'mishna_yomit',
+        titleHe: 'משנה – משנה יומית / פרק יומי',
+        category: 'גמרא ומשנה',
+        icon: '📘',
+        unitSingular: 'פרק',
+        unitPlural: 'פרקים',
+        minutesPerUnit: 8,
+        enabled: true,
+        isCore: true,
+        sefariaCalendarTitle: 'Mishnah Yomit',
+        subBooks: [
+          { id: 'shas_mishna', name: 'כל ש"ס משניות (525 פרקים)', units: 525, ref: 'Mishnah_Berakhot' },
+          { id: 'zeraim', name: 'סדר זרעים (75 פרקים)', units: 75, ref: 'Mishnah_Berakhot' },
+          { id: 'moed', name: 'סדר מועד (88 פרקים)', units: 88, ref: 'Mishnah_Shabbat' },
+          { id: 'nashim', name: 'סדר נשים (71 פרקים)', units: 71, ref: 'Mishnah_Yevamot' },
+          { id: 'nezikin', name: 'סדר נזיקין (74 פרקים)', units: 74, ref: 'Mishnah_Bava_Kamma' },
+          { id: 'kodashim', name: 'סדר קדשים (91 פרקים)', units: 91, ref: 'Mishnah_Zevachim' },
+          { id: 'taharot', name: 'סדר טהרות (126 פרקים)', units: 126, ref: 'Mishnah_Kelim' }
+        ],
+        pace: { subBookId: 'shas_mishna', mode: 'global', targetDays: 365, dailyUnits: 1, excludeFriday: false, excludeShabbat: false, startDate: '2026-01-01', offset: 0 },
+        sampleVerses: [
+          'משנה א׳: מאימתי קורין את שמע בערבין? משעה שהכהנים נכנסים לאכול בתרומתן, עד סוף האשמורה הראשונה, דברי רבי אליעזר. וחכמים אומרים: עד חצות. רבן גמליאל אומר: עד שיעלה עמוד השחר.',
+          'משנה ב׳: מאימתי קורין את שמע בשחרית? משיכיר בין תכלת ללבן. רבי אליעזר אומר: בין תכלת לכרתי. וגומרה עד הנץ החמה.'
+        ],
+        sampleCommentaries: [
+          'רבי עובדיה מברטנורא: מאימתי קורין את שמע – תנא אקרא קאי דכתיב "בשכבך ובקומך", ובעי מאימתי זמן קריאת שמע של שכיבה.',
+          'תפארת ישראל: הקורא מכאן ואילך לא הפסיד הברכות, כאדם הקורא בתורה.'
+        ]
+      },
+      {
+        id: 'torah_yomi',
+        titleHe: 'תורה – פרשת השבוע ושניים מקרא',
+        category: 'תורה ונ"ך',
+        icon: '👑',
+        unitSingular: 'עלייה',
+        unitPlural: 'עליות',
+        minutesPerUnit: 10,
+        enabled: true,
+        isCore: true,
+        sefariaCalendarTitle: 'Parashat Hashavua',
+        subBooks: [
+          { id: 'parasha_aliya', name: 'פרשת השבוע לפי עליות (שניים מקרא ואחד תרגום ורש"י)', units: 54, ref: 'Genesis' },
+          { id: 'bereishit', name: 'חומש בראשית (50 פרקים)', units: 50, ref: 'Genesis' },
+          { id: 'shemot', name: 'חומש שמות (40 פרקים)', units: 40, ref: 'Exodus' },
+          { id: 'vayikra', name: 'חומש ויקרא (27 פרקים)', units: 27, ref: 'Leviticus' },
+          { id: 'bamidbar', name: 'חומש במדבר (36 פרקים)', units: 36, ref: 'Numbers' },
+          { id: 'devarim', name: 'חומש דברים (34 פרקים)', units: 34, ref: 'Deuteronomy' }
+        ],
+        pace: { subBookId: 'parasha_aliya', mode: 'global', targetDays: 365, dailyUnits: 1, excludeFriday: false, excludeShabbat: false, startDate: '2026-01-01', offset: 0 },
+        sampleVerses: [
+          'בְּרֵאשִׁית בָּרָא אֱלֹהִים אֵת הַשָּׁמַיִם וְאֵת הָאָרֶץ: (תרגום אונקלוס: בְּקַדְמִין בְּרָא יְיָ יָת שְׁמַיָּא וְיָת אַרְעָא)',
+          'וְהָאָרֶץ הָיְתָה תֹהוּ וָבֹהוּ וְחֹשֶׁךְ עַל פְּנֵי תְהוֹם וְרוּחַ אֱלֹהִים מְרַחֶפֶת עַל פְּנֵי הַמָּיִם:',
+          'וַיֹּאמֶר אֱלֹהִים יְהִי אוֹר וַיְהִי אוֹר: וַיַּרְא אֱלֹהִים אֶת הָאוֹר כִּי טוֹב וַיַּבְדֵּל אֱלֹהִים בֵּין הָאוֹר וּבֵין הַחֹשֶׁךְ:'
+        ],
+        sampleCommentaries: [
+          'רש"י: בראשית ברא – אין המקרא הזה אומר אלא דרשני, כמו שדרשוהו רבותינו ז"ל בשביל התורה שנקראת "ראשית דרכו", ובשביל ישראל שנקראו "ראשית תבואתו".',
+          'רמב"ן: בראשית ברא אלהים – הודיע כי העולם מחודש מאפס מוחלט ברצון הבורא יתברך.'
+        ]
+      },
+      {
+        id: 'nach_yomi',
+        titleHe: 'נ"ך יומי – נביאים וכתובים',
+        category: 'תורה ונ"ך',
+        icon: '🏺',
+        unitSingular: 'פרק',
+        unitPlural: 'פרקים',
+        minutesPerUnit: 8,
+        enabled: true,
+        isCore: false,
+        sefariaCalendarTitle: 'Tanakh Yomi',
+        subBooks: [
+          { id: 'all_nach', name: 'כל ספרי הנ"ך (742 פרקים)', units: 742, ref: 'Joshua' },
+          { id: 'yehoshua_shoftim', name: 'יהושע ושופטים (45 פרקים)', units: 45, ref: 'Joshua' },
+          { id: 'shmuel', name: 'שמואל א׳ ו-ב׳ (55 פרקים)', units: 55, ref: 'I_Samuel' },
+          { id: 'melachim', name: 'מלכים א׳ ו-ב׳ (47 פרקים)', units: 47, ref: 'I_Kings' },
+          { id: 'yeshayahu', name: 'ספר ישעיהו (66 פרקים)', units: 66, ref: 'Isaiah' },
+          { id: 'mishlei', name: 'ספר משלי (31 פרקים)', units: 31, ref: 'Proverbs' }
+        ],
+        pace: { subBookId: 'all_nach', mode: 'daily', targetDays: 371, dailyUnits: 2, excludeFriday: false, excludeShabbat: false, startDate: '2026-01-01', offset: 0 },
+        sampleVerses: [
+          'וַיְהִי אַחֲרֵי מוֹת מֹשֶׁה עֶבֶד ה׳ וַיֹּאמֶר ה׳ אֶל יְהוֹשֻׁעַ בִּן נוּן מְשָׁרֵת מֹשֶׁה לֵאמֹר:',
+          'לֹא יָמוּשׁ סֵפֶר הַתּוֹרָה הַזֶּה מִפִּיךָ וְהָגִיתָ בּוֹ יוֹמָם וָלַיְלָה לְמַעַן תִּשְׁמֹר לַעֲשׂוֹת כְּכָל הַכָּתוּב בּוֹ כִּי אָז תַּצְלִיחַ אֶת דְּרָכֶךָ וְאָז תַּשְׂכִּיל:'
+        ],
+        sampleCommentaries: [
+          'רד"ק: והגית בו יומם ולילה – אפילו בעת המלחמה וההנהגה לא תסור מחשבתך מדברי התורה.',
+          'מצודת דוד: אז תשכיל – תצליח במעשיך בחכמה ובתבונה.'
+        ]
+      },
+      {
+        id: 'halacha_yomit',
+        titleHe: 'הלכה יומית',
+        category: 'הלכה',
+        icon: '⚖️',
+        unitSingular: 'סימן/הלכה',
+        unitPlural: 'סימנים',
+        minutesPerUnit: 8,
+        enabled: true,
+        isCore: true,
+        sefariaCalendarTitle: 'Halakhah Yomit',
+        subBooks: [
+          { id: 'mishna_berura', name: 'משנה ברורה – אורח חיים (697 סימנים)', units: 697, ref: 'Mishnah_Berurah' },
+          { id: 'kitzur_shulchan_aruch', name: 'קיצור שולחן ערוך (221 סימנים)', units: 221, ref: 'Kitzur_Shulchan_Arukh' },
+          { id: 'peninei_halacha', name: 'פניני הלכה – תפילה, שבת ומועדים (180 פרקים)', units: 180, ref: 'Peninei_Halakhah' },
+          { id: 'ben_ish_chai', name: 'בן איש חי – שנה א׳ ושנה ב׳ (108 פרשיות)', units: 108, ref: 'Ben_Ish_Chai' }
+        ],
+        pace: { subBookId: 'mishna_berura', mode: 'global', targetDays: 348, dailyUnits: 2, excludeFriday: false, excludeShabbat: false, startDate: '2026-01-01', offset: 0 },
+        sampleVerses: [
+          'שולחן ערוך אורח חיים סימן א׳ סעיף א׳: יתגבר כארי לעמוד בבוקר לעבודת בוראו, שיהא הוא מעורר השחר.',
+          'רמ"א: "שוויתי ה׳ לנגדי תמיד" (תהילים ט"ז, ח׳) – הוא כלל גדול בתורה ובמעלות הצדיקים אשר הולכים לפני האלקים.',
+          'מיד כשניעור משנתו יאמר: "מודה אני לפניך מלך חי וקיים שהחזרת בי נשמתי בחמלה, רבה אמונתך".'
+        ],
+        sampleCommentaries: [
+          'משנה ברורה ס"ק א׳: יתגבר כארי – שהיצר הרע מסית את האדם בבוקר בטענות של קור או עייפות, ולכן צריך להתגבר עליו כגיבור.',
+          'פניני הלכה: אמירת "מודה אני" נאמרת מיד עם היקיצה עוד לפני נטילת ידיים, משום שאין בה הזכרת שם ה׳.'
+        ]
+      },
+      {
+        id: 'shmirat_halashon',
+        titleHe: 'שמירת הלשון והחפץ חיים',
+        category: 'מחשבה ומוסר',
+        icon: '🕊️',
+        unitSingular: 'כלל/פרק',
+        unitPlural: 'פרקים',
+        minutesPerUnit: 5,
+        enabled: true,
+        isCore: true,
+        subBooks: [
+          { id: 'chofetz_chaim_daily', name: 'הלוח היומי הקבוע (חפץ חיים + שמירת הלשון - 120 ימים)', units: 120, ref: 'Chofetz_Chaim' },
+          { id: 'hilchot_lashon_hara', name: 'הלכות לשון הרע (10 כללים - 60 סעיפים)', units: 60, ref: 'Chofetz_Chaim' },
+          { id: 'hilchot_rechilut', name: 'הלכות רכילות (9 כללים - 45 סעיפים)', units: 45, ref: 'Chofetz_Chaim' }
+        ],
+        pace: { subBookId: 'chofetz_chaim_daily', mode: 'global', targetDays: 120, dailyUnits: 1, excludeFriday: false, excludeShabbat: false, startDate: '2026-01-01', offset: 0 },
+        sampleVerses: [
+          'הלכות לשון הרע כלל א׳ סעיף א׳: אסור לספר בגנות חברו אפילו על אמת גמור, וזהו הנקרא "לשון הרע" בפי חז"ל.',
+          'שמירת הלשון – שער הזכירה פרק א׳: "מי האיש החפץ חיים אוהב ימים לראות טוב, נצור לשונך מרע ושפתיך מדבר מרמה".',
+          'זכור את אשר עשה ה׳ אלקיך למרים בדרך בצאתכם ממצרים – להתבונן כמה גדולה מעלת השומר פיו ולשונו.'
+        ],
+        sampleCommentaries: [
+          'באר מים חיים: איסור לשון הרע כולל בין אם מספר בפניו ובין אם שלא בפניו, ובין אם בדברים שבין אדם למקום או בין אדם לחברו.'
+        ]
+      },
+      {
+        id: 'rambam_yomi',
+        titleHe: 'רמב"ם יומי (משנה תורה)',
+        category: 'הלכה',
+        icon: '🏛️',
+        unitSingular: 'פרק',
+        unitPlural: 'פרקים',
+        minutesPerUnit: 12,
+        enabled: true,
+        isCore: false,
+        sefariaCalendarTitle: 'Daily Rambam',
+        subBooks: [
+          { id: 'rambam_3', name: '3 פרקים ביום (סיום כל משנה תורה בשנה - 1,000 פרקים)', units: 1000, ref: 'Mishneh_Torah,_Foundations_of_the_Torah' },
+          { id: 'rambam_1', name: 'פרק אחד ביום (סיום ב-3 שנים - 1,000 פרקים)', units: 1000, ref: 'Mishneh_Torah,_Foundations_of_the_Torah' },
+          { id: 'sefer_hamitzvot', name: 'ספר המצוות היומי (334 ימים)', units: 334, ref: 'Sefer_HaMitzvot' },
+          { id: 'sefer_hamada', name: 'ספר המדע (46 פרקים)', units: 46, ref: 'Mishneh_Torah,_Foundations_of_the_Torah' },
+          { id: 'sefer_ahava', name: 'ספר אהבה (55 פרקים)', units: 55, ref: 'Mishneh_Torah,_Reading_the_Shema' }
+        ],
+        pace: { subBookId: 'rambam_3', mode: 'global', targetDays: 334, dailyUnits: 3, excludeFriday: false, excludeShabbat: false, startDate: '2026-01-01', offset: 0 },
+        sampleVerses: [
+          'הלכות יסודי התורה פרק א׳ הלכה א׳: יסוד היסודות ועמוד החכמות, לידע שיש שם מצוי ראשון. והוא ממציא כל נמצא, וכל הנמצאים משמים וארץ ומה שביניהם לא נמצאו אלא מאמיתת הימצאו.',
+          'הלכה ב׳: ואם יעלה על הדעת שהוא אינו מצוי – אין דבר אחר יכול להימצאות.',
+          'הלכה ג׳: ואם יעלה על הדעת שאין כל הנמצאים מלבדו מצויים – הוא לבדו יהיה מצוי, ולא ייבטל הוא לביטולם.'
+        ],
+        sampleCommentaries: [
+          'כסף משנה: פתח רבנו במצוות ידיעת ה׳ משום שהיא שורש כל המצוות כולן, וראשי תיבות "יסוד היסודות ועמוד החכמות" הם שם הוי"ה ברוך הוא.'
+        ]
+      },
+      {
+        id: 'chok_leisrael',
+        titleHe: 'חוק לישראל',
+        category: 'חסידות וקבלה',
+        icon: '🕯️',
+        unitSingular: 'יום לימוד',
+        unitPlural: 'ימי לימוד',
+        minutesPerUnit: 18,
+        enabled: true,
+        isCore: false,
+        subBooks: [
+          { id: 'chok_full', name: 'חוק לישראל המלא (תורה, נ"ך, משנה, גמרא, זוהר, מוסר והלכה)', units: 365, ref: 'Genesis' },
+          { id: 'chok_tanach_zohar', name: 'מסלול מקוצר: תורה, נ"ך וזוהר הפרשה בלבד', units: 365, ref: 'Zohar' }
+        ],
+        pace: { subBookId: 'chok_full', mode: 'global', targetDays: 365, dailyUnits: 1, excludeFriday: false, excludeShabbat: false, startDate: '2026-01-01', offset: 0 },
+        sampleVerses: [
+          'סדר "חוק לישראל" ליום זה כולל שבעה מדורים משולבים בתורה שבכתב ובתורה שבעל פה:',
+          'א. תורה: פסוקי העלייה היומית בפרשת השבוע (שניים מקרא ואחד תרגום ורש"י).',
+          'ב. נביאים וכתובים: פסוקים מהפטרת השבוע ומהכתובים.',
+          'ג. משנה וגמרא: משניות וקטע תלמודי.',
+          'ד. זוהר הקדוש: מאמר הזוהר השייך לפרשת השבוע.',
+          'ה. מוסר והלכה: דברי התעוררות בעבודת ה׳ והלכות יומיות פסוקות.'
+        ],
+        sampleCommentaries: [
+          'חיד"א (מורה באצבע): מעלת הלימוד בסדר "חוק לישראל" בכל יום לאחר תפילת שחרית גדולה לאין ערוך, שמחבר את האדם לכל חלקי התורה: פשט, רמז, דרש וסוד.'
+        ]
+      },
+      {
+        id: 'likutei_moharan',
+        titleHe: 'ליקוטי מוהר"ן (רבי נחמן מברסלב)',
+        category: 'חסידות וקבלה',
+        icon: '🔥',
+        unitSingular: 'תורה/עמוד',
+        unitPlural: 'תורות',
+        minutesPerUnit: 10,
+        enabled: true,
+        isCore: false,
+        subBooks: [
+          { id: 'moharan_all', name: 'ליקוטי מוהר"ן קמא ותנינא (411 תורות)', units: 411, ref: 'Likutei_Moharan' },
+          { id: 'moharan_part1', name: 'ליקוטי מוהר"ן חלק א׳ – קמא (286 תורות)', units: 286, ref: 'Likutei_Moharan' },
+          { id: 'moharan_part2', name: 'ליקוטי מוהר"ן חלק ב׳ – תנינא (125 תורות)', units: 125, ref: 'Likutei_Moharan,_Part_II' }
+        ],
+        pace: { subBookId: 'moharan_all', mode: 'daily', targetDays: 411, dailyUnits: 1, excludeFriday: false, excludeShabbat: false, startDate: '2026-01-01', offset: 0 },
+        sampleVerses: [
+          'תורה א׳ – "אשרי תמימי דרך ההולכים בתורת ה׳": דע, שעל ידי התורה מתקבלים כל התפילות וכל הבקשות, והחן והחשיבות של ישראל נתעלה.',
+          'תורה רפ"ב (אזמרה): דע, שצריך לדון את כל אדם לכף זכות, ואפילו מי שהוא רשע גמור צריך לחפש ולמצוא בו איזה מעט טוב, שבאותו המעט אינו רשע.',
+          'תנינא תורה כ"ד: מצווה גדולה להיות בשמחה תמיד, ולהתגבר להרחיק העצבות והמרה שחורה בכל כוחו.'
+        ],
+        sampleCommentaries: [
+          'ליקוטי הלכות (רבי נתן מברסלב): על ידי שמחפש ומוצא נקודות טובות בעצמו ובחברו, מעלה אותו באמת מכף חובה לכף זכות ומעורר בו כוח לשוב בתשובה.'
+        ]
+      },
+      {
+        id: 'tanya_yomi',
+        titleHe: 'תניא יומי (ליקוטי אמרים)',
+        category: 'חסידות וקבלה',
+        icon: '✨',
+        unitSingular: 'פרק/שיעור',
+        unitPlural: 'פרקים',
+        minutesPerUnit: 8,
+        enabled: true,
+        isCore: false,
+        sefariaCalendarTitle: 'Tanya Yomi',
+        subBooks: [
+          { id: 'tanya_annual', name: 'לוח התניא היומי השנתי (מ-י"ט כסלו עד י"ח כסלו)', units: 365, ref: 'Tanya,_Part_I;_Likkutei_Amarim' },
+          { id: 'likutei_amarim', name: 'חלק א׳: ספר של בינונים (53 פרקים)', units: 53, ref: 'Tanya,_Part_I;_Likkutei_Amarim' },
+          { id: 'shaar_hayichud', name: 'חלק ב׳: שער היחוד והאמונה (12 פרקים)', units: 12, ref: 'Tanya,_Part_II;_Shaar_HaYichud_VehaEmunah' },
+          { id: 'igeret_hateshuva', name: 'חלק ג׳: איגרת התשובה (12 פרקים)', units: 12, ref: 'Tanya,_Part_III;_Iggeret_HaTeshuvah' }
+        ],
+        pace: { subBookId: 'tanya_annual', mode: 'global', targetDays: 365, dailyUnits: 1, excludeFriday: false, excludeShabbat: false, startDate: '2026-01-01', offset: 0 },
+        sampleVerses: [
+          'פרק א׳: תניא (בסוף פרק ג׳ דנידה): משביעים אותו תהי צדיק ואל תהי רשע, ואפילו כל העולם כולו אומרים לך צדיק אתה – היה בעיניך כרשע.',
+          'כי לאדם המתלבש בגוף יש שתי נפשות: נפש בהמית מצד הקליפה ונוגה, ונפש אלוהית שהיא חלק אלוה ממעל ממש.',
+          'והמוח שליט על הלב בתולדתו וטבעו – להנהיג את המחשבה, הדיבור והמעשה בלבושי התורה והמצוות.'
+        ],
+        sampleCommentaries: [
+          'ביאור שטיינזלץ לתניא: מדרגת ה"בינוני" אינה אדם שעושה חצי מצוות וחצי עבירות, אלא אדם שלעולם אינו חוטא בפועל במחשבה, דיבור ומעשה, אף שמלחמת היצר פנימה עודנה קיימת.'
+        ]
+      },
+      {
+        id: 'tehillim_yomi',
+        titleHe: 'תהילים יומי',
+        category: 'תורה ונ"ך',
+        icon: '🎵',
+        unitSingular: 'פרק',
+        unitPlural: 'פרקים',
+        minutesPerUnit: 6,
+        enabled: true,
+        isCore: true,
+        subBooks: [
+          { id: 'tehillim_month', name: 'תהילים לפי 30 ימי החודש העברי (לוח קבוע)', units: 150, ref: 'Psalms' },
+          { id: 'tehillim_custom', name: 'כל ספר תהילים בקצב אישי (150 פרקים)', units: 150, ref: 'Psalms' }
+        ],
+        pace: { subBookId: 'tehillim_month', mode: 'global', targetDays: 30, dailyUnits: 5, excludeFriday: false, excludeShabbat: false, startDate: '2026-01-01', offset: 0 },
+        sampleVerses: [
+          'אַשְׁרֵי הָאִישׁ אֲשֶׁר לֹא הָלַךְ בַּעֲצַת רְשָׁעִים וּבְדֶרֶךְ חַטָּאִים לֹא עָמָד וּבְמוֹשַׁב לֵצִים לֹא יָשָׁב:',
+          'כִּי אִם בְּתוֹרַת ה׳ חֶפְצוֹ וּבְתוֹרָתוֹ יֶהְגֶּה יוֹמָם וָלָיְלָה:',
+          'וְהָיָה כְּעֵץ שָׁתוּל עַל פַּלְגֵי מָיִם אֲשֶׁר פִּרְיוֹ יִתֵּן בְּעִתּוֹ וְעָלֵהוּ לֹא יִבּוֹל וְכֹל אֲשֶׁר יַעֲשֶׂה יַצְלִיחַ:'
+        ],
+        sampleCommentaries: [
+          'רש"י: ובתורתו יהגה – בתחילה נקראת "תורת ה׳", ומשעמל בה והגה בה נקראת "תורתו" שלו.',
+          'מלבי"ם: ועלהו לא יבול – אפילו שיחת חולין של תלמידי חכמים צריכה לימוד ואינה נובלת.'
+        ]
+      },
+      {
+        id: 'maharal_kitvei',
+        titleHe: 'מהר"ל מפראג',
+        category: 'מחשבה ומוסר',
+        icon: '🦁',
+        unitSingular: 'פרק',
+        unitPlural: 'פרקים',
+        minutesPerUnit: 12,
+        enabled: true,
+        isCore: false,
+        subBooks: [
+          { id: 'netivot_olam', name: 'נתיבות עולם (נתיב התורה, העבודה וגמילות חסדים - 120 פרקים)', units: 120, ref: 'Netivot_Olam' },
+          { id: 'tiferet_yisrael', name: 'תפארת ישראל – מתן תורה ומעלתה (70 פרקים)', units: 70, ref: 'Tiferet_Yisrael' },
+          { id: 'netzach_yisrael', name: 'נצח ישראל – גלות וגאולה (64 פרקים)', units: 64, ref: 'Netzach_Yisrael' },
+          { id: 'gevurot_hashem', name: 'גבורות ה׳ – יציאת מצרים ופסח (73 פרקים)', units: 73, ref: 'Gevurot_Hashem' },
+          { id: 'beer_hagolah', name: 'באר הגולה – ביאור אגדות חז"ל (35 פרקים)', units: 35, ref: 'Be\'er_HaGolah' }
+        ],
+        pace: { subBookId: 'netivot_olam', mode: 'days', targetDays: 120, dailyUnits: 1, excludeFriday: false, excludeShabbat: false, startDate: '2026-10-01', offset: 0 },
+        sampleVerses: [
+          'נתיבות עולם – נתיב התורה פרק א׳: "על שלושה דברים העולם עומד: על התורה, ועל העבודה, ועל גמילות חסדים". כי שלמות האדם נחלקת לשלושה יחסים: יחס האדם אל עצמו להשלים נפשו ושכלו – וזוהי התורה; יחס האדם אל בוראו ועילתו – וזוהי העבודה; ויחס האדם אל זולתו – וזוהי גמילות חסדים.',
+          'תפארת ישראל פרק א׳: התורה היא סדר שכלי עליון נבדל מן החומר, ולכן ניתנה במדבר – מקום הפקר המופשט מכל קניין חומרי.'
+        ],
+        sampleCommentaries: [
+          'ביאור לדברי המהר"ל: אצל המהר"ל התורה אינה רק אוסף חוקים חיצוני, אלא עצם ה"סדר" האלוהי שעל פיו נברא העולם ("איסתכל באורייתא וברא עלמא").'
+        ]
+      },
+      {
+        id: 'kuzari',
+        titleHe: 'ספר הכוזרי (רבי יהודה הלוי)',
+        category: 'מחשבה ומוסר',
+        icon: '💎',
+        unitSingular: 'קטע יומי',
+        unitPlural: 'קטעים',
+        minutesPerUnit: 10,
+        enabled: true,
+        isCore: false,
+        subBooks: [
+          { id: 'kuzari_full', name: 'ספר הכוזרי המלא – חמשת המאמרים (90 קטעים)', units: 90, ref: 'Kuzari' },
+          { id: 'kuzari_maamar1', name: 'מאמר ראשון – יסודות האמונה וההיסטוריה (30 קטעים)', units: 30, ref: 'Kuzari.1' },
+          { id: 'kuzari_maamar2', name: 'מאמר שני – סגולת ישראל וארץ ישראל (20 קטעים)', units: 20, ref: 'Kuzari.2' },
+          { id: 'kuzari_maamar3', name: 'מאמר שלישי – החסיד, התפילה והמצוות (20 קטעים)', units: 20, ref: 'Kuzari.3' }
+        ],
+        pace: { subBookId: 'kuzari_full', mode: 'days', targetDays: 90, dailyUnits: 1, excludeFriday: false, excludeShabbat: false, startDate: '2026-10-01', offset: 0 },
+        sampleVerses: [
+          'מאמר ראשון אות א׳: מלך כוזר חלם חלום חוזר ונשנה, וכאילו מלאך מדבר אליו ואומר לו: "כוונתך רצויה לפני האלוהים, אבל מעשך איננו רצוי".',
+          'פתח החבר ואמר: אני מאמין באלוהי אברהם, יצחק וישראל, אשר הוציא את בני ישראל ממצרים באותות ובמופתים, וכלכלם במדבר, והנחילם את ארץ כנען, ונתן להם תורה על ידי משה רבנו.',
+          'מאמר חמישי: "עבד הזמן – עבדי עבדים הוא; עבד ה׳ – הוא לבדו חופשי".'
+        ],
+        sampleCommentaries: [
+          'קול יהודה / אוצר נחמד: ריה"ל מדגיש כי אמונת ישראל אינה בנויה על השערות פילוסופיות מופשטות ("אלוהי אריסטו"), אלא על התגלות היסטורית לעיני שש מאות אלף איש במעמד הר סיני ("אלוהי אברהם").'
+        ]
+      },
+      {
+        id: 'rav_kook_kitvei',
+        titleHe: 'כתבי הרב קוק זצ"ל',
+        category: 'מחשבה ומוסר',
+        icon: '🌅',
+        unitSingular: 'פסקה',
+        unitPlural: 'פסקאות',
+        minutesPerUnit: 10,
+        enabled: true,
+        isCore: true,
+        subBooks: [
+          { id: 'orot_hatorah', name: 'אורות התורה (13 פרקים – 90 פסקאות)', units: 90, ref: 'Orot' },
+          { id: 'orot_hateshuva', name: 'אורות התשובה (17 פרקים – 60 פסקאות)', units: 60, ref: 'Orot' },
+          { id: 'orot', name: 'ספר אורות – ארץ ישראל ותחיית האומה (120 פסקאות)', units: 120, ref: 'Orot' },
+          { id: 'mussar_avicha', name: 'מוסר אביך ומידות הראי"ה (45 פסקאות)', units: 45, ref: 'Orot' },
+          { id: 'ein_ayah', name: 'עין אי"ה – אגדות הש"ס (180 פסקאות)', units: 180, ref: 'Orot' }
+        ],
+        pace: { subBookId: 'orot_hatorah', mode: 'days', targetDays: 90, dailyUnits: 1, excludeFriday: false, excludeShabbat: false, startDate: '2026-10-01', offset: 0 },
+        sampleVerses: [
+          'אורות התורה פרק א׳ פסקה א׳: התורה צריכה שתיקבע בלב האדם פנימה עד שתהיה לו לטבע שני, לא כדבר חיצוני שנלמד מן השפה ולחוץ, אלא כנשמת חייו ממש.',
+          'אורות התשובה פרק ד׳: התשובה הטבעית והאמונית נובעת מעומק הנשמה הטהורה, המשתוקקת תמיד לשוב אל מקורה האלוהי ולהאיר את כל כוחות החיים.',
+          'מוסר אביך: האהבה הגדולה לכל הבריות ולכל העולמות פותחת את שערי האורה והקדושה בנפש.'
+        ],
+        sampleCommentaries: [
+          'הרב צבי יהודה קוק זצ"ל: לימוד "אורות התורה" ו"אורות התשובה" כקביעות יומית מחיה את הנפש ומחבר את לימוד הגמרא וההלכה עם רוחב האמונה הגדולה.'
+        ]
+      },
+      {
+        id: 'mesillat_yesharim',
+        titleHe: 'מסילת ישרים (רמח"ל) ומוסר',
+        category: 'מחשבה ומוסר',
+        icon: '🪜',
+        unitSingular: 'פרק',
+        unitPlural: 'פרקים',
+        minutesPerUnit: 8,
+        enabled: false,
+        isCore: false,
+        subBooks: [
+          { id: 'mesillat_26', name: 'מסילת ישרים (26 פרקים)', units: 26, ref: 'Mesillat_Yesharim' },
+          { id: 'orchot_tzadikim', name: 'אורחות צדיקים (28 שערים)', units: 28, ref: 'Orchot_Tzadikim' },
+          { id: 'chovot_halevavot', name: 'חובות הלבבות (10 שערים – 90 קטעים)', units: 90, ref: 'Duties_of_the_Heart' }
+        ],
+        pace: { subBookId: 'mesillat_26', mode: 'days', targetDays: 26, dailyUnits: 1, excludeFriday: false, excludeShabbat: false, startDate: '2026-10-01', offset: 0 },
+        sampleVerses: [
+          'פרק א׳ – בביאור כלל חובת האדם בעולמו: יסוד החסידות ושורש העבודה התמימה הוא שיתברר ויתאמת אצל האדם מה חובתו בעולמו ולמה צריך שישים מבטו ומגמתו בכל אשר הוא עמל כל ימי חייו.',
+          'סולם רבי פנחס בן יאיר: התורה מביאה לידי זהירות, זהירות מביאה לידי זריזות, זריזות מביאה לידי נקיות, נקיות מביאה לידי פרישות, פרישות מביאה לידי טהרה, טהרה מביאה לידי חסידות.'
+        ],
+        sampleCommentaries: [
+          'הגר"א מווילנה: על ספר "מסילת ישרים" אמר הגר"א שבשמונה הפרקים הראשונים לא מצא אפילו תיבה אחת מיותרת.'
+        ]
+      },
+      {
+        id: 'gemara_yerushalmi',
+        titleHe: 'תלמוד ירושלמי יומי',
+        category: 'גמרא ומשנה',
+        icon: '🌿',
+        unitSingular: 'דף',
+        unitPlural: 'דפים',
+        minutesPerUnit: 25,
+        enabled: false,
+        isCore: false,
+        sefariaCalendarTitle: 'Yerushalmi Yomi',
+        subBooks: [
+          { id: 'yerushalmi_all', name: 'הדף היומי בירושלמי (1,554 דפים)', units: 1554, ref: 'Jerusalem_Talmud_Berakhot' },
+          { id: 'yerushalmi_berakhot', name: 'ירושלמי מסכת ברכות (68 דפים)', units: 68, ref: 'Jerusalem_Talmud_Berakhot' },
+          { id: 'yerushalmi_sheviit', name: 'ירושלמי מסכת שביעית (31 דפים)', units: 31, ref: 'Jerusalem_Talmud_Sheviit' }
+        ],
+        pace: { subBookId: 'yerushalmi_all', mode: 'global', targetDays: 1554, dailyUnits: 1, excludeFriday: false, excludeShabbat: false, startDate: '2026-01-01', offset: 0 },
+        sampleVerses: [
+          'תלמוד ירושלמי ברכות פרק א׳ הלכה א׳: מאימתי קורין את שמע בערבין. אנן תנינן משעה שהכהנים נכנסין לאכול בתרומתן. תני רבי חייא: משעה שבני אדם רגילים ליכנס להסב.'
+        ],
+        sampleCommentaries: [
+          'פני משה: בירושלמי הסגנון קצר ותמציתי, ומברר את שורש ההלכה מתוך פשט המשנה והברייתא.'
+        ]
+      },
+      {
+        id: 'pirkei_avot',
+        titleHe: 'פרקי אבות (עם פירושים)',
+        category: 'גמרא ומשנה',
+        icon: '🌱',
+        unitSingular: 'פרק/משנה',
+        unitPlural: 'משניות',
+        minutesPerUnit: 7,
+        enabled: false,
+        isCore: false,
+        subBooks: [
+          { id: 'avot_mishnayot', name: 'משנה אחת ביום בפרקי אבות (108 משניות)', units: 108, ref: 'Pirkei_Avot' },
+          { id: 'avot_perakim', name: 'פרק שלם בפרקי אבות (6 פרקים)', units: 6, ref: 'Pirkei_Avot' }
+        ],
+        pace: { subBookId: 'avot_mishnayot', mode: 'days', targetDays: 108, dailyUnits: 1, excludeFriday: false, excludeShabbat: false, startDate: '2026-10-01', offset: 0 },
+        sampleVerses: [
+          'פרק א׳ משנה א׳: משה קיבל תורה מסיני, ומסרה ליהושע, ויהושע לזקנים, וזקנים לנביאים, ונביאים מסרוה לאנשי כנסת הגדולה.',
+          'משנה ב׳: שמעון הצדיק היה משיירי כנסת הגדולה. הוא היה אומר: על שלושה דברים העולם עומד – על התורה, ועל העבודה, ועל גמילות חסדים.'
+        ],
+        sampleCommentaries: [
+          'רמב"ם (שמונה פרקים): מסכת אבות פותחת בשלשלת הקבלה כדי ללמד שגם מידות הנפש ודרך ארץ הן מסיני ממש.'
+        ]
+      },
+      {
+        id: 'zohar_yomi',
+        titleHe: 'הזוהר הקדוש ומועדי השנה',
+        category: 'חסידות וקבלה',
+        icon: '🌟',
+        unitSingular: 'דף/שיעור',
+        unitPlural: 'דפים',
+        minutesPerUnit: 12,
+        enabled: false,
+        isCore: false,
+        subBooks: [
+          { id: 'zohar_parasha', name: 'הזוהר היומי לפי פרשת השבוע (365 ימים)', units: 365, ref: 'Zohar' },
+          { id: 'moadim_30', name: 'הלכות ומחשבת החג (30 יום קודם החג)', units: 30, ref: 'Pesachim' }
+        ],
+        pace: { subBookId: 'zohar_parasha', mode: 'global', targetDays: 365, dailyUnits: 1, excludeFriday: false, excludeShabbat: false, startDate: '2026-01-01', offset: 0 },
+        sampleVerses: [
+          'רבי חזקיה פתח: כְּשׁוֹשַׁנָּה בֵּין הַחוֹחִים כֵּן רַעְיָתִי בֵּין הַבָּנוֹת. מאן שושנה? דא כנסת ישראל.',
+          'שואלין ודורשין בהלכות החג שלושים יום קודם החג – הכנה הלכתית ופנימית למועדי ה׳.'
+        ],
+        sampleCommentaries: [
+          'מתוק מדבש: לימוד דברי הזוהר הקדוש מאיר את הנשמה וממשיך ברכה וקדושה על כל היום.'
+        ]
+      }
+    ];
+
+    // ==================== 3. ניהול State, ערכת צבעים ו-localStorage ====================
+    const STORAGE_KEY = 'limud_yomi_mobile_state_v3';
+
+    let state = {
+      currentPage: 'today',       // 'today' | 'catalog' | 'planner' | 'catchup' | 'settings' | 'reader'
+      catchupSubTab: 'missed',    // 'missed' | 'notes'
+      themeMode: 'system',        // 'light' | 'dark' | 'system'
+      selectedDateStr: toDateKey(new Date()),
+      busyDayMode: false,
+      categoryFilter: 'הכל',
+      catalogFilter: 'הכל',
+      readerFontSize: 20,
+      showCommentaries: true,
+      reminderTime: '20:30',
+      plannerSelectedTrackId: 'kuzari',
+      readerActiveTrackId: null,
+      tracks: [],
+      completedMap: {},
+      notes: [],
+      sefariaCalendarCache: {},
+      liveTextCache: {}
+    };
+
+    function loadState() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (raw) {
+          const parsed = JSON.parse(raw);
+          state.themeMode = parsed.themeMode || 'system';
+          state.busyDayMode = !!parsed.busyDayMode;
+          state.readerFontSize = parsed.readerFontSize || 20;
+          state.showCommentaries = parsed.showCommentaries !== undefined ? parsed.showCommentaries : true;
+          state.reminderTime = parsed.reminderTime || '20:30';
+          state.plannerSelectedTrackId = parsed.plannerSelectedTrackId || 'kuzari';
+          state.completedMap = parsed.completedMap || {};
+          state.notes = parsed.notes || [];
+
+          const savedMap = {};
+          (parsed.tracks || []).forEach(t => { savedMap[t.id] = t; });
+          state.tracks = DEFAULT_TRACKS.map((def, idx) => {
+            const saved = savedMap[def.id];
+            if (!saved) return JSON.parse(JSON.stringify({ ...def, order: idx }));
+            return {
+              ...JSON.parse(JSON.stringify(def)),
+              enabled: saved.enabled !== undefined ? saved.enabled : def.enabled,
+              isCore: saved.isCore !== undefined ? saved.isCore : def.isCore,
+              order: saved.order !== undefined ? saved.order : idx,
+              pace: { ...def.pace, ...(saved.pace || {}) }
+            };
+          }).sort((a, b) => a.order - b.order);
+        } else {
+          state.tracks = JSON.parse(JSON.stringify(DEFAULT_TRACKS)).map((t, i) => ({ ...t, order: i }));
+        }
+      } catch (e) {
+        state.tracks = JSON.parse(JSON.stringify(DEFAULT_TRACKS)).map((t, i) => ({ ...t, order: i }));
+      }
+      applyThemeToDOM();
+    }
+
+    function saveState() {
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify({
+          themeMode: state.themeMode,
+          busyDayMode: state.busyDayMode,
+          readerFontSize: state.readerFontSize,
+          showCommentaries: state.showCommentaries,
+          reminderTime: state.reminderTime,
+          plannerSelectedTrackId: state.plannerSelectedTrackId,
+          completedMap: state.completedMap,
+          notes: state.notes,
+          tracks: state.tracks.map(t => ({
+            id: t.id,
+            enabled: t.enabled,
+            isCore: t.isCore,
+            order: t.order,
+            pace: t.pace
+          }))
+        }));
+      } catch (e) {}
+    }
+
+    // זיהוי האם ברירת המחדל של הטלפון/המערכת היא מצב כהה
+    function isSystemDark() {
+      if (document.documentElement.classList.contains('dark')) return true;
+      if (document.documentElement.classList.contains('light')) return false;
+      return window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+    }
+
+    function applyThemeToDOM() {
+      const root = document.getElementById('appRoot');
+      let effectiveDark = false;
+      if (state.themeMode === 'dark') {
+        effectiveDark = true;
+      } else if (state.themeMode === 'light') {
+        effectiveDark = false;
+      } else {
+        effectiveDark = isSystemDark();
+      }
+
+      root.classList.remove('app-theme-light', 'app-theme-dark');
+      root.classList.add(effectiveDark ? 'app-theme-dark' : 'app-theme-light');
+
+      // עדכון כפתור ערכת הצבעים המהיר בראש העמוד
+      const iconEl = document.getElementById('quickThemeIcon');
+      const labelEl = document.getElementById('quickThemeLabel');
+      if (iconEl && labelEl) {
+        if (state.themeMode === 'light') {
+          iconEl.textContent = '☀️';
+          labelEl.textContent = 'בהיר';
+        } else if (state.themeMode === 'dark') {
+          iconEl.textContent = '🌙';
+          labelEl.textContent = 'כהה';
+        } else {
+          iconEl.textContent = '📱';
+          labelEl.textContent = 'אוטומטי';
+        }
+      }
+    }
+
+    function setThemeMode(mode) {
+      state.themeMode = mode;
+      saveState();
+      applyThemeToDOM();
+      renderCurrentPage();
+      const names = { light: 'ערכת צבעים בהירה ☀️', dark: 'ערכת צבעים כהה (מצב לילה) 🌙', system: 'ברירת מחדל כמו הטלפון 📱' };
+      showToast(`עברת ל${names[mode]}`);
+    }
+
+    function cycleThemeQuick() {
+      const order = ['light', 'dark', 'system'];
+      const next = order[(order.indexOf(state.themeMode) + 1) % order.length];
+      setThemeMode(next);
+    }
+
+    if (window.matchMedia) {
+      window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
+        if (state.themeMode === 'system') applyThemeToDOM();
+      });
+    }
+
+    function showToast(msg) {
+      const banner = document.getElementById('toastBanner');
+      const text = document.getElementById('toastText');
+      if (!banner || !text) return;
+      text.textContent = msg;
+      banner.classList.remove('hidden');
+      clearTimeout(window._toastTimer);
+      window._toastTimer = setTimeout(() => {
+        banner.classList.add('hidden');
+      }, 2400);
+    }
+
+    // ==================== 4. חישוב המנה היומית וקצב סיום ====================
+    function getSelectedSubBook(track) {
+      return track.subBooks.find(sb => sb.id === track.pace.subBookId) || track.subBooks[0];
+    }
+
+    function countActiveDaysBetween(startStr, endStr, excludeFriday, excludeShabbat) {
+      const s = new Date(startStr + 'T00:00:00');
+      const e = new Date(endStr + 'T00:00:00');
+      if (e <= s) return 0;
+      const totalDays = Math.round((e - s) / 86400000);
+      if (!excludeFriday && !excludeShabbat) return totalDays;
+      let count = 0;
+      const cur = new Date(s);
+      for (let i = 0; i < totalDays; i++) {
+        const day = cur.getDay();
+        if (excludeFriday && day === 5) { cur.setDate(cur.getDate() + 1); continue; }
+        if (excludeShabbat && day === 6) { cur.setDate(cur.getDate() + 1); continue; }
+        count++;
+        cur.setDate(cur.getDate() + 1);
+      }
+      return count;
+    }
+
+    function resolveDailyUnits(track, subBook) {
+      const p = track.pace;
+      const remainingTotal = Math.max(1, subBook.units - (p.offset || 0));
+      if (p.mode === 'global') return p.dailyUnits || 1;
+      if (p.mode === 'days') return remainingTotal / Math.max(1, p.targetDays || 90);
+      if (p.mode === 'date') {
+        const targetStr = p.targetDate || toDateKey(new Date(Date.now() + 90 * 86400000));
+        const activeDays = Math.max(1, countActiveDaysBetween(p.startDate || toDateKey(new Date()), targetStr, p.excludeFriday, p.excludeShabbat));
+        return remainingTotal / activeDays;
+      }
+      return Math.max(0.25, p.dailyUnits || 1);
+    }
+
+    function computeDailyPortion(track, dateStr) {
+      const subBook = getSelectedSubBook(track);
+      const p = track.pace;
+      const dateObj = new Date(dateStr + 'T12:00:00');
+      const hebInfo = getHebrewDateInfo(dateObj);
+      const parasha = getParashaForDate(dateObj);
+      const dayOfWeek = dateObj.getDay();
+
+      const isReviewDay = p.mode !== 'global' && ((p.excludeFriday && dayOfWeek === 5) || (p.excludeShabbat && dayOfWeek === 6));
+      const activeElapsed = countActiveDaysBetween(p.startDate || '2026-01-01', dateStr, p.mode !== 'global' && p.excludeFriday, p.mode !== 'global' && p.excludeShabbat);
+      const unitsPerDay = resolveDailyUnits(track, subBook);
+
+      const startFloat = (p.offset || 0) + activeElapsed * unitsPerDay;
+      const startUnit = (Math.floor(startFloat) % subBook.units) + 1;
+      const span = Math.max(1, Math.ceil(unitsPerDay));
+      const endUnit = Math.min(subBook.units, startUnit + span - 1);
+
+      const completedUnits = Math.min(subBook.units, Math.max(0, startUnit - 1));
+      const progressPct = Math.min(100, Math.round((startUnit / subBook.units) * 100));
+      const remainingUnits = Math.max(0, subBook.units - completedUnits);
+      const daysRemaining = unitsPerDay > 0 ? Math.ceil(remainingUnits / unitsPerDay) : 0;
+
+      const estFinishDate = new Date(dateObj.getTime() + daysRemaining * 86400000);
+      const estFinishHeb = getHebrewDateInfo(estFinishDate).formatted;
+
+      let portionLabel = '';
+      let sefariaRef = `${subBook.ref}.${startUnit}`;
+
+      const calCache = state.sefariaCalendarCache[dateStr] || [];
+      const liveItem = (p.mode === 'global' && track.sefariaCalendarTitle)
+        ? calCache.find(c => (c.title?.en || '').toLowerCase() === track.sefariaCalendarTitle.toLowerCase())
+        : null;
+
+      if (isReviewDay) {
+        portionLabel = `יום חזרה ושינון שבועי (עד ${track.unitSingular} ${toGematria(startUnit)})`;
+      } else if (liveItem && liveItem.displayValue?.he) {
+        portionLabel = liveItem.displayValue.he;
+        sefariaRef = liveItem.ref || sefariaRef;
+      } else if (track.id === 'torah_yomi' && subBook.id === 'parasha_aliya') {
+        const aliyot = ['עליית ראשון', 'עליית שני', 'עליית שלישי', 'עליית רביעי', 'עליית חמישי', 'עליית שישי ושביעי', 'קריאת הפרשה והפטרה'];
+        portionLabel = `פרשת ${parasha} – ${aliyot[dayOfWeek]} (שניים מקרא ורש"י)`;
+      } else if (track.id === 'tehillim_yomi' && subBook.id === 'tehillim_month' && p.mode === 'global') {
+        const idx = Math.max(0, Math.min(29, hebInfo.dayOfMonth - 1));
+        const [fromCh, toCh] = TEHILLIM_MONTHLY[idx];
+        if (fromCh === 119) {
+          portionLabel = `יום ${toGematria(hebInfo.dayOfMonth)} בחודש: פרק קי"ט (${idx === 24 ? 'אותיות א׳–נ"ו' : 'אותיות צ"ז–קע"ו'})`;
+          sefariaRef = 'Psalms.119';
+        } else {
+          portionLabel = `יום ${toGematria(hebInfo.dayOfMonth)} בחודש: פרקים ${toGematria(fromCh)}–${toGematria(toCh)}`;
+          sefariaRef = `Psalms.${fromCh}-${toCh}`;
+        }
+      } else if (track.id === 'chok_leisrael') {
+        portionLabel = `פרשת ${parasha} – ${getDayOfWeekHe(dateObj)}`;
+      } else if (track.id === 'gemara_bavli') {
+        const dafNum = Math.max(2, (startUnit % 150) + 2);
+        const masechetName = subBook.id === 'shas_all' ? 'דף יומי' : subBook.name.split('(')[0].trim();
+        portionLabel = `${masechetName} – דף ${toGematria(dafNum)} ע"א–ע"ב`;
+        sefariaRef = `${subBook.ref}.${dafNum}a`;
+      } else {
+        const bookShort = subBook.name.split('(')[0].trim();
+        if (endUnit > startUnit) {
+          portionLabel = `${bookShort} • ${track.unitPlural} ${toGematria(startUnit)}–${toGematria(endUnit)}`;
+        } else {
+          portionLabel = `${bookShort} • ${track.unitSingular} ${toGematria(startUnit)}`;
+        }
+      }
+
+      const isCompleted = !!state.completedMap[`${dateStr}::${track.id}`];
+      const estMinutes = isReviewDay ? 10 : Math.max(4, Math.round(track.minutesPerUnit * Math.min(3, Math.max(0.7, unitsPerDay))));
+
+      return {
+        track,
+        subBook,
+        dateStr,
+        portionLabel,
+        sefariaRef,
+        startUnit,
+        totalUnits: subBook.units,
+        progressPct,
+        daysRemaining,
+        estFinishHeb,
+        isCompleted,
+        isReviewDay,
+        estMinutes,
+        unitsPerDay
+      };
+    }
+
+    function calculateStreak() {
+      let streak = 0;
+      const cursor = new Date();
+      for (let i = 0; i < 365; i++) {
+        const dKey = toDateKey(cursor);
+        const anyDone = Object.keys(state.completedMap).some(k => k.startsWith(dKey + '::') && state.completedMap[k]);
+        if (anyDone) {
+          streak++;
+          cursor.setDate(cursor.getDate() - 1);
+        } else {
+          if (i === 0) {
+            cursor.setDate(cursor.getDate() - 1);
+            continue;
+          }
+          break;
+        }
+      }
+      return streak;
+    }
+
+    function getMissedPortions() {
+      const missed = [];
+      const today = new Date();
+      const coreTracks = state.tracks.filter(t => t.enabled && t.isCore);
+      for (let daysAgo = 1; daysAgo <= 7; daysAgo++) {
+        const d = new Date(today.getTime() - daysAgo * 86400000);
+        const dKey = toDateKey(d);
+        const hebLabel = getHebrewDateInfo(d).formatted;
+        coreTracks.forEach(track => {
+          if (!state.completedMap[`${dKey}::${track.id}`]) {
+            const p = computeDailyPortion(track, dKey);
+            if (!p.isReviewDay) {
+              missed.push({
+                dateKey: dKey,
+                hebLabel,
+                trackId: track.id,
+                trackTitle: track.titleHe,
+                trackIcon: track.icon,
+                portionLabel: p.portionLabel
+              });
+            }
+          }
+        });
+      }
+      return missed;
+    }
+
+    async function tryFetchSefariaCalendar(dateStr) {
+      if (state.sefariaCalendarCache[dateStr]) return;
+      try {
+        const [y, m, d] = dateStr.split('-').map(Number);
+        const resp = await fetch(`https://www.sefaria.org/api/calendars?year=${y}&month=${m}&day=${d}&diaspora=0`);
+        if (resp.ok) {
+          const data = await resp.json();
+          if (data && Array.isArray(data.calendar_items)) {
+            state.sefariaCalendarCache[dateStr] = data.calendar_items;
+            renderCurrentPage();
+          }
+        }
+      } catch (e) {}
+    }
+
+    // ==================== 5. ניווט בין דפים ייעודיים ====================
+    function navigateToPage(pageName, extraParam) {
+      if (pageName === 'planner' && extraParam) {
+        state.plannerSelectedTrackId = extraParam;
+      }
+      if (pageName === 'reader' && extraParam) {
+        state.readerActiveTrackId = extraParam;
+      }
+      state.currentPage = pageName;
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      renderCurrentPage();
+    }
+
+    function renderCurrentPage() {
+      const streak = calculateStreak();
+      document.getElementById('headerStreakText').textContent = `${streak} ימים`;
+
+      const missed = getMissedPortions();
+      const badge = document.getElementById('navMissedBadge');
+      if (missed.length > 0) {
+        badge.textContent = missed.length;
+        badge.classList.remove('hidden');
+      } else {
+        badge.classList.add('hidden');
+      }
+
+      // עדכון כותרות הסרגל העליון לפי הדף הנוכחי
+      const titles = {
+        today: ['הלימוד היומי שלי', 'לוח לימוד יומי מותאם אישית'],
+        catalog: ['בחירת ספרים ומסלולים', 'הפעל או כבה ספרים וקבע את סדרם'],
+        planner: ['תכנון קצב וזמן סיום', 'קבע בכמה זמן תרצה לסיים כל ספר וכרך'],
+        catchup: ['השלמות ומחברת חידושים', 'מעקב חובות לימוד וכתיבת חידושי תורה'],
+        settings: ['עיצוב והגדרות תצוגה', 'ערכת צבעים, גודל גופן ותזכורת יומית'],
+        reader: ['קריאה ולימוד יומי', 'טקסט הלימוד עם מפרשים וכתיבת חידוש']
+      };
+      const [tTitle, tSub] = titles[state.currentPage] || titles.today;
+      document.getElementById('topBarTitle').textContent = tTitle;
+      document.getElementById('topBarSubtitle').textContent = tSub;
+
+      // הדגשת הכפתור הפעיל בסרגל הניווט התחתון
+      const navPages = ['today', 'catalog', 'planner', 'catchup', 'settings'];
+      const activeNav = state.currentPage === 'reader' ? 'today' : state.currentPage;
+      navPages.forEach(p => {
+        const btn = document.getElementById('navBtn-' + p);
+        if (!btn) return;
+        if (p === activeNav) {
+          btn.className = 'py-2 px-1 rounded-2xl flex flex-col items-center justify-center gap-1 app-btn-primary shadow-md relative';
+        } else {
+          btn.className = 'py-2 px-1 rounded-2xl flex flex-col items-center justify-center gap-1 app-text-muted hover:opacity-80 relative';
+        }
+      });
+
+      const container = document.getElementById('pageContainer');
+      if (state.currentPage === 'today') {
+        renderTodayPage(container);
+      } else if (state.currentPage === 'catalog') {
+        renderCatalogPage(container);
+      } else if (state.currentPage === 'planner') {
+        renderPlannerPage(container);
+      } else if (state.currentPage === 'catchup') {
+        renderCatchupAndNotesPage(container, missed);
+      } else if (state.currentPage === 'settings') {
+        renderSettingsPage(container);
+      } else if (state.currentPage === 'reader') {
+        renderReaderPage(container);
+      }
+    }
+
+    // ==================== דף 1: הלימוד היום (לוח יומי) ====================
+    function renderTodayPage(container) {
+      const selDate = new Date(state.selectedDateStr + 'T12:00:00');
+      const hebInfo = getHebrewDateInfo(selDate);
+      const dayOfWeekHe = getDayOfWeekHe(selDate);
+      const parasha = getParashaForDate(selDate);
+      const isToday = state.selectedDateStr === toDateKey(new Date());
+
+      const enabledTracks = state.tracks.filter(t => t.enabled && (!state.busyDayMode || t.isCore));
+      const allPortions = enabledTracks.map(t => computeDailyPortion(t, state.selectedDateStr));
+      const filteredPortions = state.categoryFilter === 'הכל'
+        ? allPortions
+        : allPortions.filter(p => p.track.category === state.categoryFilter);
+
+      const doneCount = allPortions.filter(p => p.isCompleted).length;
+      const totalCount = allPortions.length;
+      const pctToday = totalCount > 0 ? Math.round((doneCount / totalCount) * 100) : 0;
+      const remainingMins = allPortions.filter(p => !p.isCompleted).reduce((acc, p) => acc + p.estMinutes, 0);
+
+      const categories = ['הכל', 'גמרא ומשנה', 'תורה ונ"ך', 'הלכה', 'מחשבה ומוסר', 'חסידות וקבלה'];
+
+      container.innerHTML = `
+        <div class="page-animate space-y-4">
+
+          <!-- כרטיס תאריך עברי וניווט מהיר בין ימים עם כפתורים גדולים -->
+          <section class="app-card rounded-3xl p-4 shadow-sm space-y-3.5">
+            <div class="text-center space-y-1">
+              <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-bold" style="background-color: var(--app-accent-soft); color: var(--app-text);">
+                <span>🕯️ פרשת ${parasha}</span>
+                <span>•</span>
+                <span>${formatDisplayGregorian(state.selectedDateStr)}</span>
+              </div>
+              <h2 class="text-xl font-extrabold">${dayOfWeekHe}, ${hebInfo.formatted}</h2>
+            </div>
+
+            <!-- 3 כפתורי ניווט תאריך גדולים וברורים -->
+            <div class="grid grid-cols-3 gap-2.5">
+              <button onclick="shiftDate(-1)" class="py-3 px-3 rounded-2xl app-btn-secondary font-bold text-sm flex items-center justify-center gap-1.5">
+                <span>▶</span>
+                <span>יום קודם</span>
+              </button>
+              <button onclick="goToToday()" class="py-3 px-3 rounded-2xl ${isToday ? 'app-btn-primary' : 'app-btn-secondary'} font-bold text-sm flex items-center justify-center gap-1.5">
+                <span>📍</span>
+                <span>היום</span>
+              </button>
+              <button onclick="shiftDate(1)" class="py-3 px-3 rounded-2xl app-btn-secondary font-bold text-sm flex items-center justify-center gap-1.5">
+                <span>יום הבא</span>
+                <span>◀</span>
+              </button>
+            </div>
+
+            <!-- מד ההספק היומי -->
+            <div class="app-card-alt rounded-2xl p-3.5 space-y-2">
+              <div class="flex items-center justify-between text-sm font-bold">
+                <span>הספק יומי: ${doneCount} מתוך ${totalCount} הושלמו</span>
+                <span>${pctToday}%</span>
+              </div>
+              <div class="w-full h-3.5 rounded-full overflow-hidden" style="background-color: var(--app-border);">
+                <div class="h-full transition-all duration-300 rounded-full" style="width: ${pctToday}%; background-color: var(--app-success);"></div>
+              </div>
+              <div class="flex items-center justify-between text-xs app-text-muted font-semibold pt-0.5">
+                <span>${remainingMins === 0 && totalCount > 0 ? '🎉 אשריך! השלמת את כל הקביעות להיום!' : `⏱️ זמן לימוד משוער שנותר: כ-${remainingMins} דקות`}</span>
+                ${doneCount < totalCount && totalCount > 0 ? `<button onclick="markAllTodayCompleted()" class="underline font-bold" style="color: var(--app-primary);">סמן הכל כנלמד</button>` : ''}
+              </div>
+            </div>
+
+            <!-- כפתור מצב "עמוס היום" גדול וברור -->
+            <button onclick="toggleBusyDayMode()" class="w-full py-3 px-4 rounded-2xl font-bold text-sm flex items-center justify-between ${state.busyDayMode ? 'app-btn-primary shadow-md' : 'app-btn-secondary'}">
+              <span class="flex items-center gap-2">
+                <span class="text-lg">⚡</span>
+                <span>מצב "עמוס היום" (הצג לימודי ליבה בלבד)</span>
+              </span>
+              <span class="px-2.5 py-0.5 rounded-lg text-xs font-extrabold" style="background-color: rgba(0,0,0,0.15);">
+                ${state.busyDayMode ? 'פעיל ✓' : 'כבוי'}
+              </span>
+            </button>
+          </section>
+
+          <!-- סרגל סינון קטגוריות עם כפתורים נוחים -->
+          <div class="flex gap-2 overflow-x-auto no-scrollbar py-1">
+            ${categories.map(cat => `
+              <button onclick="setCategoryFilter('${cat}')" class="shrink-0 px-4 py-2.5 rounded-2xl text-sm font-bold transition-all ${state.categoryFilter === cat ? 'app-btn-primary shadow-sm' : 'app-card'}">
+                ${cat}
+              </button>
+            `).join('')}
+          </div>
+
+          <!-- רשימת כרטיסי הלימוד היומי -->
+          <section class="space-y-3.5">
+            ${filteredPortions.length === 0 ? `
+              <div class="app-card rounded-3xl p-8 text-center space-y-3">
+                <div class="text-4xl">📚</div>
+                <h3 class="font-extrabold text-lg">לא נמצאו מסלולי לימוד בסינון זה</h3>
+                <p class="text-sm app-text-muted">אפשר לבחור ולהפעיל ספרים נוספים בדף "ספרים" או לבטל את הסינון הנוכחי.</p>
+                <div class="flex flex-col sm:flex-row gap-2 pt-2">
+                  <button onclick="resetTodayFilters()" class="flex-1 py-3.5 rounded-2xl app-btn-secondary font-bold text-sm">הצג את כל המסלולים</button>
+                  <button onclick="navigateToPage('catalog')" class="flex-1 py-3.5 rounded-2xl app-btn-primary font-bold text-sm">📚 עבור לבחירת ספרים</button>
+                </div>
+              </div>
+            ` : filteredPortions.map(p => renderDailyCardHtml(p)).join('')}
+          </section>
+
+        </div>
+      `;
+    }
+
+    function renderDailyCardHtml(p) {
+      const modeNames = {
+        global: 'לוח עולמי קבוע',
+        days: `יעד: ${p.track.pace.targetDays} ימים`,
+        date: 'עד תאריך יעד',
+        daily: `${p.track.pace.dailyUnits} ${p.track.unitPlural} ביום`
+      };
+      const modeBadge = modeNames[p.track.pace.mode] || 'לוח קבוע';
+
+      return `
+        <article class="app-card rounded-3xl p-4 shadow-sm space-y-3.5" style="${p.isCompleted ? 'border-color: var(--app-success); border-width: 2px;' : ''}">
+          <!-- שורה עליונה: קטגוריה, ליבה, וזמן משוער -->
+          <div class="flex items-center justify-between gap-2">
+            <div class="flex items-center gap-2 flex-wrap">
+              <span class="text-2xl">${p.track.icon}</span>
+              <span class="px-2.5 py-1 rounded-xl text-xs font-bold app-card-alt">${p.track.category}</span>
+              ${p.track.isCore ? `<span class="px-2.5 py-1 rounded-xl text-xs font-bold" style="background-color: var(--app-accent-soft);">⭐ ליבה</span>` : ''}
+            </div>
+            <span class="px-2.5 py-1 rounded-xl text-xs font-bold app-card-alt">⏱️ ~${p.estMinutes} דק׳</span>
+          </div>
+
+          <!-- כותרת הספר והמנה היומית -->
+          <div class="space-y-1">
+            <h3 class="font-extrabold text-lg leading-snug ${p.isCompleted ? 'line-through opacity-75' : ''}">
+              ${p.track.titleHe}
+            </h3>
+            <p class="font-bold text-base leading-snug" style="color: var(--app-primary);">
+              📍 ${p.portionLabel}
+            </p>
+          </div>
+
+          <!-- פס התקדמות בספר + כפתור שינוי קצב -->
+          <div class="app-card-alt rounded-2xl p-3 space-y-2">
+            <div class="flex items-center justify-between text-xs font-bold">
+              <span>התקדמות בספר: ${p.progressPct}%</span>
+              <span>סיום: ${p.estFinishHeb} (עוד ${p.daysRemaining} ימים)</span>
+            </div>
+            <div class="w-full h-2 rounded-full overflow-hidden" style="background-color: var(--app-border);">
+              <div class="h-full rounded-full" style="width: ${p.progressPct}%; background-color: var(--app-primary);"></div>
+            </div>
+            <div class="flex items-center justify-between pt-1">
+              <span class="text-xs app-text-muted font-semibold">קצב נוכחי: ${modeBadge}</span>
+              <button onclick="navigateToPage('planner', '${p.track.id}')" class="px-3 py-1.5 rounded-xl app-card text-xs font-bold hover:opacity-80">
+                ⏱️ שנה זמן סיום / כרך
+              </button>
+            </div>
+          </div>
+
+          <!-- 2 כפתורי פעולה ראשיים גדולים וברורים -->
+          <div class="grid grid-cols-2 gap-2.5 pt-1">
+            <button onclick="navigateToPage('reader', '${p.track.id}')" class="py-3.5 px-3 rounded-2xl app-btn-primary font-bold text-sm flex items-center justify-center gap-2 shadow-sm">
+              <span class="text-base">📖</span>
+              <span>פתח לקריאה</span>
+            </button>
+
+            <button onclick="togglePortionComplete('${p.track.id}')" class="py-3.5 px-3 rounded-2xl font-bold text-sm flex items-center justify-center gap-2 shadow-sm ${p.isCompleted ? 'app-btn-success' : 'app-btn-secondary'}">
+              <span class="text-base">${p.isCompleted ? '✓' : '⭕'}</span>
+              <span>${p.isCompleted ? 'נלמד היום!' : 'סמן "למדתי"'}</span>
+            </button>
+          </div>
+        </article>
+      `;
+    }
+
+    // ==================== דף 2: קטלוג ספרים (בחירה וסידור) ====================
+    function renderCatalogPage(container) {
+      const enabledCount = state.tracks.filter(t => t.enabled).length;
+      const categories = ['הכל', 'גמרא ומשנה', 'תורה ונ"ך', 'הלכה', 'מחשבה ומוסר', 'חסידות וקבלה'];
+      const visibleTracks = state.catalogFilter === 'הכל'
+        ? state.tracks
+        : state.tracks.filter(t => t.category === state.catalogFilter);
+
+      container.innerHTML = `
+        <div class="page-animate space-y-4">
+
+          <!-- הסבר וסיכום -->
+          <section class="app-card rounded-3xl p-4 space-y-3">
+            <div class="flex items-center justify-between">
+              <h2 class="font-extrabold text-base">📚 אילו ספרים תרצה ללמוד?</h2>
+              <span class="px-3 py-1 rounded-full text-xs font-extrabold app-btn-primary">${enabledCount} מתוך ${state.tracks.length} פעילים</span>
+            </div>
+            <p class="text-xs app-text-muted leading-relaxed">
+              הפעל או כבה כל מסלול לימוד בלחיצה על הכפתור הגדול. ניתן לסמן מסלולים כ"לימוד ליבה" ולקבוע את סדר הופעתם בדף הבית.
+            </p>
+            <div class="grid grid-cols-2 gap-2 pt-1">
+              <button onclick="setAllTracksEnabled(true)" class="py-2.5 rounded-2xl app-btn-secondary text-xs font-bold">✓ הפעל את כל הספרים</button>
+              <button onclick="navigateToPage('today')" class="py-2.5 rounded-2xl app-btn-primary text-xs font-bold">📅 חזור ללוח היומי</button>
+            </div>
+          </section>
+
+          <!-- סינון קטגוריות בקטלוג -->
+          <div class="flex gap-2 overflow-x-auto no-scrollbar py-1">
+            ${categories.map(cat => `
+              <button onclick="setCatalogFilter('${cat}')" class="shrink-0 px-4 py-2.5 rounded-2xl text-sm font-bold transition-all ${state.catalogFilter === cat ? 'app-btn-primary shadow-sm' : 'app-card'}">
+                ${cat}
+              </button>
+            `).join('')}
+          </div>
+
+          <!-- רשימת כל הספרים עם כפתורים גדולים -->
+          <section class="space-y-3">
+            ${visibleTracks.map(track => {
+              const realIdx = state.tracks.findIndex(x => x.id === track.id);
+              const subBook = getSelectedSubBook(track);
+              return `
+                <div class="app-card rounded-3xl p-4 space-y-3 shadow-sm" style="${track.enabled ? 'border-color: var(--app-primary);' : 'opacity: 0.82;'}">
+                  <div class="flex items-start justify-between gap-3">
+                    <div class="flex items-start gap-3 min-w-0">
+                      <div class="w-12 h-12 rounded-2xl app-card-alt flex items-center justify-center text-2xl shrink-0">
+                        ${track.icon}
+                      </div>
+                      <div class="min-w-0">
+                        <span class="text-xs font-bold app-text-muted">${track.category}</span>
+                        <h3 class="font-extrabold text-base leading-snug">${track.titleHe}</h3>
+                        <p class="text-xs font-semibold mt-0.5" style="color: var(--app-primary);">${subBook.name}</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- שורת כפתורים גדולה וברורה לכל ספר -->
+                  <div class="grid grid-cols-2 gap-2 pt-1">
+                    <button onclick="toggleTrackEnabled('${track.id}')" class="py-3 px-3 rounded-2xl font-bold text-sm flex items-center justify-center gap-1.5 ${track.enabled ? 'app-btn-success' : 'app-btn-secondary'}">
+                      <span>${track.enabled ? '✓' : '➕'}</span>
+                      <span>${track.enabled ? 'מוצג בלוח היומי' : 'הוסף ללוח היומי'}</span>
+                    </button>
+
+                    <button onclick="navigateToPage('planner', '${track.id}')" class="py-3 px-3 rounded-2xl app-btn-secondary font-bold text-sm flex items-center justify-center gap-1.5">
+                      <span>⏱️</span>
+                      <span>בחר כרך וקצב</span>
+                    </button>
+                  </div>
+
+                  ${track.enabled ? `
+                    <div class="flex items-center justify-between gap-2 pt-2 border-t border-[var(--app-border)]">
+                      <button onclick="toggleTrackCore('${track.id}')" class="px-3 py-2 rounded-xl text-xs font-bold flex items-center gap-1.5 ${track.isCore ? 'app-btn-primary' : 'app-btn-secondary'}">
+                        <span>⭐</span>
+                        <span>${track.isCore ? 'לימוד ליבה (חובה)' : 'הגדר כלימוד ליבה'}</span>
+                      </button>
+
+                      <div class="flex items-center gap-1.5">
+                        <span class="text-xs app-text-muted font-semibold ml-1">סדר:</span>
+                        <button onclick="moveTrack(${realIdx}, -1)" class="px-3 py-2 rounded-xl app-btn-secondary text-xs font-bold" title="הזז למעלה">▲ למעלה</button>
+                        <button onclick="moveTrack(${realIdx}, 1)" class="px-3 py-2 rounded-xl app-btn-secondary text-xs font-bold" title="הזז למטה">▼ למטה</button>
+                      </div>
+                    </div>
+                  ` : ''}
+                </div>
+              `;
+            }).join('')}
+          </section>
+
+        </div>
+      `;
+    }
+
+    // ==================== דף 3: תכנון קצב וזמן סיום ("בכמה זמן לסיים") ====================
+    function renderPlannerPage(container) {
+      const track = state.tracks.find(t => t.id === state.plannerSelectedTrackId) || state.tracks[0];
+      const p = track.pace;
+      const subBook = getSelectedSubBook(track);
+      const perDay = resolveDailyUnits(track, subBook);
+      const remainingUnits = Math.max(1, subBook.units - (p.offset || 0));
+      const daysToFinish = perDay > 0 ? Math.ceil(remainingUnits / perDay) : 0;
+      const finishDate = new Date(Date.now() + daysToFinish * 86400000);
+      const finishHeb = getHebrewDateInfo(finishDate).formatted;
+
+      const dayPresets = [
+        { label: 'חודש (30 יום)', days: 30 },
+        { label: 'חודשיים (60 יום)', days: 60 },
+        { label: '3 חודשים (90 יום)', days: 90 },
+        { label: 'חצי שנה (180 יום)', days: 180 },
+        { label: 'שנה (365 יום)', days: 365 },
+        { label: 'שנתיים (730 יום)', days: 730 }
+      ];
+
+      const dailyUnitPresets = [1, 2, 3, 4, 5, 10];
+
+      container.innerHTML = `
+        <div class="page-animate space-y-4">
+
+          <!-- שלב 1: בחירת הספר והכרך/המסכת -->
+          <section class="app-card rounded-3xl p-4 space-y-3 shadow-sm">
+            <div class="flex items-center gap-2">
+              <span class="w-7 h-7 rounded-full app-btn-primary flex items-center justify-center text-xs font-extrabold">1</span>
+              <h2 class="font-extrabold text-base">בחר ספר ומסכת / כרך לתכנון:</h2>
+            </div>
+
+            <div class="space-y-2">
+              <label class="text-xs font-bold app-text-muted block">קטגוריה / ספר ראשי:</label>
+              <select onchange="selectPlannerTrack(this.value)" class="w-full rounded-2xl p-3.5 text-base font-bold app-card-alt focus:outline-none">
+                ${state.tracks.map(t => `
+                  <option value="${t.id}" ${t.id === track.id ? 'selected' : ''}>${t.icon} ${t.titleHe}</option>
+                `).join('')}
+              </select>
+            </div>
+
+            <div class="space-y-2 pt-1">
+              <label class="text-xs font-bold app-text-muted block">בחר כרך / מסכת ספציפית מתוך "${track.titleHe}":</label>
+              <select onchange="updatePlannerSubBook(this.value)" class="w-full rounded-2xl p-3.5 text-sm font-bold app-card-alt focus:outline-none">
+                ${track.subBooks.map(sb => `
+                  <option value="${sb.id}" ${sb.id === p.subBookId ? 'selected' : ''}>${sb.name}</option>
+                `).join('')}
+              </select>
+            </div>
+          </section>
+
+          <!-- שלב 2: בחירת שיטת החישוב (4 כפתורי ענק ברורים) -->
+          <section class="app-card rounded-3xl p-4 space-y-3 shadow-sm">
+            <div class="flex items-center gap-2">
+              <span class="w-7 h-7 rounded-full app-btn-primary flex items-center justify-center text-xs font-extrabold">2</span>
+              <h2 class="font-extrabold text-base">איך תרצה לקבוע את קצב הלימוד?</h2>
+            </div>
+
+            <div class="grid grid-cols-2 gap-2.5">
+              <button onclick="setPlannerMode('global')" class="p-3.5 rounded-2xl text-right space-y-1 ${p.mode === 'global' ? 'app-btn-primary shadow-md' : 'app-btn-secondary'}">
+                <div class="text-xl">🌍</div>
+                <div class="font-extrabold text-sm">לוח עולמי קבוע</div>
+                <div class="text-xs opacity-80">סנכרון עם המחזור העולמי</div>
+              </button>
+
+              <button onclick="setPlannerMode('days')" class="p-3.5 rounded-2xl text-right space-y-1 ${p.mode === 'days' ? 'app-btn-primary shadow-md' : 'app-btn-secondary'}">
+                <div class="text-xl">📆</div>
+                <div class="font-extrabold text-sm">לפי זמן סיום</div>
+                <div class="text-xs opacity-80">בכמה ימים/חודשים לסיים</div>
+              </button>
+
+              <button onclick="setPlannerMode('daily')" class="p-3.5 rounded-2xl text-right space-y-1 ${p.mode === 'daily' ? 'app-btn-primary shadow-md' : 'app-btn-secondary'}">
+                <div class="text-xl">📖</div>
+                <div class="font-extrabold text-sm">כמות קבועה ביום</div>
+                <div class="text-xs opacity-80">מספר ${track.unitPlural} קבוע ליום</div>
+              </button>
+
+              <button onclick="setPlannerMode('date')" class="p-3.5 rounded-2xl text-right space-y-1 ${p.mode === 'date' ? 'app-btn-primary shadow-md' : 'app-btn-secondary'}">
+                <div class="text-xl">🎯</div>
+                <div class="font-extrabold text-sm">עד תאריך יעד</div>
+                <div class="text-xs opacity-80">סיום עד חג או יום השנה</div>
+              </button>
+            </div>
+
+            <!-- הגדרות מפורטות לפי המצב שנבחר -->
+            ${p.mode === 'days' ? `
+              <div class="pt-3 border-t border-[var(--app-border)] space-y-3">
+                <label class="text-sm font-extrabold block">בכמה זמן תרצה לסיים את "${subBook.name.split('(')[0].trim()}"?</label>
+                <div class="grid grid-cols-2 gap-2">
+                  ${dayPresets.map(pr => `
+                    <button onclick="setPlannerTargetDays(${pr.days})" class="py-3 px-3 rounded-2xl font-bold text-xs ${p.targetDays === pr.days ? 'app-btn-primary' : 'app-btn-secondary'}">
+                      ${pr.label}
+                    </button>
+                  `).join('')}
+                </div>
+                <div class="app-card-alt rounded-2xl p-3 flex items-center justify-between gap-2">
+                  <button onclick="setPlannerTargetDays(Math.max(5, (p.targetDays || 90) - 10))" class="w-12 h-11 rounded-xl app-card font-extrabold text-lg">-10</button>
+                  <div class="text-center">
+                    <div class="text-lg font-extrabold">${p.targetDays} ימים</div>
+                    <div class="text-xs app-text-muted">מותאם אישית</div>
+                  </div>
+                  <button onclick="setPlannerTargetDays((p.targetDays || 90) + 10)" class="w-12 h-11 rounded-xl app-card font-extrabold text-lg">+10</button>
+                </div>
+              </div>
+            ` : ''}
+
+            ${p.mode === 'daily' ? `
+              <div class="pt-3 border-t border-[var(--app-border)] space-y-3">
+                <label class="text-sm font-extrabold block">כמה ${track.unitPlural} תרצה ללמוד בכל יום?</label>
+                <div class="grid grid-cols-3 gap-2">
+                  ${dailyUnitPresets.map(u => `
+                    <button onclick="setPlannerDailyUnits(${u})" class="py-3 rounded-2xl font-bold text-sm ${p.dailyUnits === u ? 'app-btn-primary' : 'app-btn-secondary'}">
+                      ${u} ${track.unitPlural}
+                    </button>
+                  `).join('')}
+                </div>
+              </div>
+            ` : ''}
+
+            ${p.mode === 'date' ? `
+              <div class="pt-3 border-t border-[var(--app-border)] space-y-2.5">
+                <label class="text-sm font-extrabold block">בחר תאריך יעד לסיום הספר:</label>
+                <input type="date" value="${p.targetDate || toDateKey(new Date(Date.now() + 90 * 86400000))}" onchange="setPlannerTargetDate(this.value)" class="w-full rounded-2xl p-3.5 text-base font-bold app-card-alt">
+              </div>
+            ` : ''}
+
+            ${p.mode !== 'global' ? `
+              <div class="pt-3 border-t border-[var(--app-border)] space-y-2">
+                <div class="text-xs font-bold app-text-muted">ימי חזרה והשלמה שבועיים (ללא חומר חדש):</div>
+                <div class="grid grid-cols-2 gap-2">
+                  <button onclick="togglePlannerExclude('friday')" class="py-3 px-3 rounded-2xl font-bold text-xs flex items-center justify-center gap-1.5 ${p.excludeFriday ? 'app-btn-primary' : 'app-btn-secondary'}">
+                    <span>${p.excludeFriday ? '✓' : '⭕'}</span>
+                    <span>ללא יום שישי</span>
+                  </button>
+                  <button onclick="togglePlannerExclude('shabbat')" class="py-3 px-3 rounded-2xl font-bold text-xs flex items-center justify-center gap-1.5 ${p.excludeShabbat ? 'app-btn-primary' : 'app-btn-secondary'}">
+                    <span>${p.excludeShabbat ? '✓' : '⭕'}</span>
+                    <span>ללא שבת קודש</span>
+                  </button>
+                </div>
+              </div>
+            ` : ''}
+          </section>
+
+          <!-- שלב 3: סיכום תוכנית הסיום וכפתורי שמירה -->
+          <section class="app-card rounded-3xl p-4 space-y-3.5 shadow-sm" style="border-color: var(--app-primary); border-width: 2px;">
+            <h3 class="font-extrabold text-base flex items-center gap-2">
+              <span>📊</span>
+              <span>סיכום תוכנית הסיום שלך:</span>
+            </h3>
+
+            <div class="app-card-alt rounded-2xl p-3.5 space-y-1.5 text-sm">
+              <div class="flex justify-between">
+                <span class="app-text-muted">ספר נבחר:</span>
+                <span class="font-bold">${subBook.name.split('(')[0].trim()}</span>
+              </div>
+              <div class="flex justify-between">
+                <span class="app-text-muted">היקף כולל:</span>
+                <span class="font-bold">${subBook.units} ${track.unitPlural}</span>
+              </div>
+              <div class="flex justify-between">
+                <span class="app-text-muted">קצב יומי נדרש:</span>
+                <span class="font-extrabold" style="color: var(--app-primary);">כ-${perDay.toFixed(1)} ${track.unitPlural} ביום</span>
+              </div>
+              <div class="flex justify-between pt-1 border-t border-[var(--app-border)]">
+                <span class="app-text-muted">תאריך סיום משוער:</span>
+                <span class="font-extrabold" style="color: var(--app-success);">${finishHeb} (עוד ${daysToFinish} ימים)</span>
+              </div>
+            </div>
+
+            <div class="grid grid-cols-1 gap-2.5">
+              <button onclick="recalculatePlannerFromToday()" class="w-full py-3.5 rounded-2xl app-btn-secondary font-bold text-sm flex items-center justify-center gap-2">
+                <span>🔄</span>
+                <span>חשב מסלול מחדש מהיום והלאה</span>
+              </button>
+              <button onclick="saveAndGoTodayFromPlanner()" class="w-full py-4 rounded-2xl app-btn-primary font-extrabold text-base flex items-center justify-center gap-2 shadow-md">
+                <span>💾</span>
+                <span>שמור תוכנית ועבור ללוח היומי</span>
+              </button>
+            </div>
+          </section>
+
+        </div>
+      `;
+    }
+
+    // ==================== דף 4: השלמות ומחברת חידושים ====================
+    function renderCatchupAndNotesPage(container, missedList) {
+      container.innerHTML = `
+        <div class="page-animate space-y-4">
+
+          <!-- 2 כפתורי לשוניות גדולים וברורים -->
+          <div class="grid grid-cols-2 gap-2.5">
+            <button onclick="setCatchupSubTab('missed')" class="py-3.5 px-3 rounded-2xl font-extrabold text-sm flex items-center justify-center gap-2 ${state.catchupSubTab === 'missed' ? 'app-btn-primary shadow-md' : 'app-card'}">
+              <span>⏳</span>
+              <span>השלמות (${missedList.length})</span>
+            </button>
+            <button onclick="setCatchupSubTab('notes')" class="py-3.5 px-3 rounded-2xl font-extrabold text-sm flex items-center justify-center gap-2 ${state.catchupSubTab === 'notes' ? 'app-btn-primary shadow-md' : 'app-card'}">
+              <span>✍️</span>
+              <span>מחברת חידושים (${state.notes.length})</span>
+            </button>
+          </div>
+
+          ${state.catchupSubTab === 'missed' ? `
+            <section class="app-card rounded-3xl p-4 space-y-2">
+              <h2 class="font-extrabold text-base">⏳ מגירת השלמות (7 ימים אחרונים)</h2>
+              <p class="text-xs app-text-muted leading-relaxed">
+                לימודי ליבה שלא סומנו כ"נלמד" בשבוע האחרון מרוכזים כאן כדי שתוכל להשלים אותם בנחת או בשבת קודש.
+              </p>
+            </section>
+
+            ${missedList.length === 0 ? `
+              <div class="app-card rounded-3xl p-8 text-center space-y-3">
+                <div class="text-5xl">🏆</div>
+                <h3 class="font-extrabold text-lg">אשריך! אין חובות השלמה</h3>
+                <p class="text-sm app-text-muted">כל לימודי הליבה שלך מ-7 הימים האחרונים הושלמו במלואם.</p>
+              </div>
+            ` : `
+              <section class="space-y-3">
+                ${missedList.map(item => `
+                  <div class="app-card rounded-3xl p-4 space-y-3 shadow-sm">
+                    <div class="flex items-start justify-between gap-2">
+                      <div class="flex items-center gap-2.5">
+                        <span class="text-2xl">${item.trackIcon}</span>
+                        <div>
+                          <span class="text-xs font-bold app-text-muted">${item.hebLabel} • ${formatDisplayGregorian(item.dateKey)}</span>
+                          <h3 class="font-extrabold text-base">${item.trackTitle}</h3>
+                          <p class="text-sm font-bold" style="color: var(--app-primary);">${item.portionLabel}</p>
+                        </div>
+                      </div>
+                    </div>
+                    <div class="grid grid-cols-2 gap-2">
+                      <button onclick="openMissedInReader('${item.dateKey}', '${item.trackId}')" class="py-3 rounded-2xl app-btn-secondary font-bold text-xs flex items-center justify-center gap-1.5">
+                        <span>📖</span>
+                        <span>פתח לקריאה</span>
+                      </button>
+                      <button onclick="completeMissedItem('${item.dateKey}', '${item.trackId}')" class="py-3 rounded-2xl app-btn-success font-bold text-xs flex items-center justify-center gap-1.5">
+                        <span>✓</span>
+                        <span>השלמתי עכשיו!</span>
+                      </button>
+                    </div>
+                  </div>
+                `).join('')}
+              </section>
+            `}
+          ` : `
+            <!-- כתיבת חידוש חדש ישירות מהמחברת -->
+            <section class="app-card rounded-3xl p-4 space-y-3 shadow-sm">
+              <h2 class="font-extrabold text-base">✍️ הוסף חידוש תורה או תובנה אישית</h2>
+              <select id="newNoteTrackSelect" class="w-full rounded-2xl p-3 text-sm font-bold app-card-alt">
+                ${state.tracks.map(t => `<option value="${t.id}">${t.icon} ${t.titleHe}</option>`).join('')}
+              </select>
+              <textarea id="newNoteTextarea" rows="3" placeholder="כתוב כאן חידוש, נקודה למחשבה או סיכום קצר מהלימוד..." class="w-full rounded-2xl p-3.5 text-sm app-card-alt focus:outline-none"></textarea>
+              <button onclick="addDirectNote()" class="w-full py-3.5 rounded-2xl app-btn-primary font-extrabold text-sm shadow-sm">
+                💾 שמור במחברת החידושים
+              </button>
+            </section>
+
+            ${state.notes.length === 0 ? `
+              <div class="app-card rounded-3xl p-8 text-center space-y-2">
+                <div class="text-4xl">📝</div>
+                <h3 class="font-extrabold text-base">מחברת החידושים עדיין ריקה</h3>
+                <p class="text-xs app-text-muted">כתוב למעלה את החידוש הראשון שלך או הוסף הערה מתוך מסך הקריאה.</p>
+              </div>
+            ` : `
+              <section class="space-y-3">
+                ${state.notes.map((n, i) => `
+                  <article class="app-card rounded-3xl p-4 space-y-2.5 shadow-sm">
+                    <div class="flex items-start justify-between gap-2">
+                      <div>
+                        <h3 class="font-extrabold text-base">${n.trackTitle}</h3>
+                        <p class="text-xs font-bold" style="color: var(--app-primary);">${n.portionLabel} • ${formatDisplayGregorian(n.dateKey)}</p>
+                      </div>
+                      <button onclick="deleteNote(${i})" class="px-3 py-1.5 rounded-xl app-btn-secondary text-xs font-bold">🗑️ מחק</button>
+                    </div>
+                    <p class="text-sm leading-relaxed whitespace-pre-line pt-2 border-t border-[var(--app-border)]">${n.content}</p>
+                  </article>
+                `).join('')}
+              </section>
+            `}
+          `}
+
+        </div>
+      `;
+    }
+
+    // ==================== דף 5: הגדרות ועיצוב (ערכת צבעים, גופן ותזכורות) ====================
+    function renderSettingsPage(container) {
+      container.innerHTML = `
+        <div class="page-animate space-y-4">
+
+          <!-- בחירת ערכת צבעים: בהירה / כהה / ברירת מחדל כמו הטלפון -->
+          <section class="app-card rounded-3xl p-4 space-y-3.5 shadow-sm">
+            <div>
+              <h2 class="font-extrabold text-base">🎨 ערכת הצבעים של האפליקציה</h2>
+              <p class="text-xs app-text-muted mt-0.5">בחר את מראה האפליקציה הנוח ביותר לעיניים שלך:</p>
+            </div>
+
+            <div class="grid grid-cols-1 gap-2.5">
+              <button onclick="setThemeMode('light')" class="p-4 rounded-2xl text-right flex items-center justify-between ${state.themeMode === 'light' ? 'app-btn-primary shadow-md' : 'app-btn-secondary'}">
+                <div class="flex items-center gap-3">
+                  <span class="text-2xl">☀️</span>
+                  <div>
+                    <div class="font-extrabold text-base">ערכת צבעים בהירה (מצב יום)</div>
+                    <div class="text-xs opacity-80">רקע בהיר ונעים לקריאה ברורה באור יום</div>
+                  </div>
+                </div>
+                <span class="text-lg font-extrabold">${state.themeMode === 'light' ? '✓ פעיל' : ''}</span>
+              </button>
+
+              <button onclick="setThemeMode('dark')" class="p-4 rounded-2xl text-right flex items-center justify-between ${state.themeMode === 'dark' ? 'app-btn-primary shadow-md' : 'app-btn-secondary'}">
+                <div class="flex items-center gap-3">
+                  <span class="text-2xl">🌙</span>
+                  <div>
+                    <div class="font-extrabold text-base">ערכת צבעים כהה (מצב לילה)</div>
+                    <div class="text-xs opacity-80">רקע כהה מרגיע שמונע סנוור בלילה</div>
+                  </div>
+                </div>
+                <span class="text-lg font-extrabold">${state.themeMode === 'dark' ? '✓ פעיל' : ''}</span>
+              </button>
+
+              <button onclick="setThemeMode('system')" class="p-4 rounded-2xl text-right flex items-center justify-between ${state.themeMode === 'system' ? 'app-btn-primary shadow-md' : 'app-btn-secondary'}">
+                <div class="flex items-center gap-3">
+                  <span class="text-2xl">📱</span>
+                  <div>
+                    <div class="font-extrabold text-base">ברירת מחדל כמו הטלפון (אוטומטי)</div>
+                    <div class="text-xs opacity-80">מתאים את עצמו אוטומטית להגדרות המכשיר שלך</div>
+                  </div>
+                </div>
+                <span class="text-lg font-extrabold">${state.themeMode === 'system' ? '✓ פעיל' : ''}</span>
+              </button>
+            </div>
+          </section>
+
+          <!-- גודל גופן הקריאה -->
+          <section class="app-card rounded-3xl p-4 space-y-3 shadow-sm">
+            <div class="flex items-center justify-between">
+              <h2 class="font-extrabold text-base">🔠 גודל גופן בקורא הספרים</h2>
+              <span class="px-3 py-1 rounded-full text-xs font-bold app-card-alt">${state.readerFontSize}px</span>
+            </div>
+
+            <div class="grid grid-cols-4 gap-2">
+              <button onclick="setReaderFontSize(16)" class="py-3 rounded-2xl font-bold text-xs ${state.readerFontSize === 16 ? 'app-btn-primary' : 'app-btn-secondary'}">רגיל (16)</button>
+              <button onclick="setReaderFontSize(20)" class="py-3 rounded-2xl font-bold text-sm ${state.readerFontSize === 20 ? 'app-btn-primary' : 'app-btn-secondary'}">בינוני (20)</button>
+              <button onclick="setReaderFontSize(24)" class="py-3 rounded-2xl font-bold text-base ${state.readerFontSize === 24 ? 'app-btn-primary' : 'app-btn-secondary'}">גדול (24)</button>
+              <button onclick="setReaderFontSize(28)" class="py-3 rounded-2xl font-bold text-lg ${state.readerFontSize === 28 ? 'app-btn-primary' : 'app-btn-secondary'}">ענק (28)</button>
+            </div>
+
+            <div class="app-card-alt rounded-2xl p-3.5 leading-relaxed" style="font-size: ${state.readerFontSize}px;">
+              "כִּי אִם בְּתוֹרַת ה׳ חֶפְצוֹ וּבְתוֹרָתוֹ יֶהְגֶּה יוֹמָם וָלָיְלָה"
+            </div>
+          </section>
+
+          <!-- תזכורת יומית -->
+          <section class="app-card rounded-3xl p-4 space-y-3 shadow-sm">
+            <h2 class="font-extrabold text-base">🔔 שעת תזכורת יומית ללימוד</h2>
+            <p class="text-xs app-text-muted">בחר שעה קבועה לקביעות היומית שלך בתורה:</p>
+            <div class="grid grid-cols-4 gap-2">
+              ${['07:30', '13:30', '20:30', '22:00'].map(t => `
+                <button onclick="setReminderPreset('${t}')" class="py-3 rounded-2xl font-bold text-sm ${state.reminderTime === t ? 'app-btn-primary' : 'app-btn-secondary'}">
+                  ${t}
+                </button>
+              `).join('')}
+            </div>
+          </section>
+
+        </div>
+      `;
+    }
+
+    // ==================== דף 6: קורא הספרים המובנה (Full-Page Reader) ====================
+    function renderReaderPage(container) {
+      const track = state.tracks.find(t => t.id === state.readerActiveTrackId) || state.tracks[0];
+      const p = computeDailyPortion(track, state.selectedDateStr);
+      const cachedVerses = state.liveTextCache[p.sefariaRef];
+      const versesToDisplay = (cachedVerses && cachedVerses.length > 0) ? cachedVerses : track.sampleVerses;
+
+      container.innerHTML = `
+        <div class="page-animate space-y-4">
+
+          <!-- סרגל עליון של הקורא עם כפתור חזרה גדול וכפתורי גופן -->
+          <section class="app-card rounded-3xl p-4 space-y-3 shadow-sm">
+            <div class="flex items-center justify-between gap-2">
+              <button onclick="navigateToPage('today')" class="py-2.5 px-4 rounded-2xl app-btn-secondary font-extrabold text-sm flex items-center gap-1.5">
+                <span>➜</span>
+                <span>חזרה ללוח היומי</span>
+              </button>
+
+              <div class="flex items-center gap-1.5">
+                <button onclick="changeReaderFont(-2)" class="px-3.5 py-2.5 rounded-2xl app-btn-secondary font-extrabold text-sm">A-</button>
+                <button onclick="changeReaderFont(2)" class="px-3.5 py-2.5 rounded-2xl app-btn-secondary font-extrabold text-sm">A+</button>
+              </div>
+            </div>
+
+            <div class="pt-1 border-t border-[var(--app-border)]">
+              <span class="text-xs font-bold app-text-muted">${track.icon} ${track.category} • התקדמות בספר: ${p.progressPct}%</span>
+              <h2 class="font-extrabold text-lg mt-0.5">${track.titleHe}</h2>
+              <p class="font-bold text-base" style="color: var(--app-primary);">📍 ${p.portionLabel}</p>
+            </div>
+
+            <!-- כפתורי הצגת מפרשים וטעינת טקסט מלא מספריא -->
+            <div class="grid grid-cols-2 gap-2 pt-1">
+              <button onclick="toggleReaderCommentaries()" class="py-2.5 px-3 rounded-2xl font-bold text-xs flex items-center justify-center gap-1.5 ${state.showCommentaries ? 'app-btn-primary' : 'app-btn-secondary'}">
+                <span>💬</span>
+                <span>${state.showCommentaries ? 'מפרשים מוצגים ✓' : 'הצג מפרשים'}</span>
+              </button>
+
+              <button onclick="fetchLiveSefariaText('${p.sefariaRef}')" class="py-2.5 px-3 rounded-2xl app-btn-secondary font-bold text-xs flex items-center justify-center gap-1.5">
+                <span>🌐</span>
+                <span>טען פרק מלא מספריא</span>
+              </button>
+            </div>
+          </section>
+
+          <!-- גוף טקסט הלימוד -->
+          <section class="app-card rounded-3xl p-5 space-y-4 shadow-sm">
+            <div class="space-y-4 leading-relaxed" style="font-size: ${state.readerFontSize}px;">
+              ${versesToDisplay.map((v, i) => `
+                <p class="leading-relaxed">
+                  <span class="font-extrabold text-sm ml-1" style="color: var(--app-primary);">[${toGematria(i + 1)}]</span>
+                  <span>${v}</span>
+                </p>
+              `).join('')}
+            </div>
+
+            ${state.showCommentaries && track.sampleCommentaries?.length ? `
+              <div class="pt-4 border-t border-[var(--app-border)] space-y-3">
+                <h3 class="font-extrabold text-sm app-text-muted">📚 מפרשים וביאורים על הלימוד:</h3>
+                ${track.sampleCommentaries.map(c => `
+                  <div class="app-card-alt rounded-2xl p-3.5 leading-relaxed" style="font-size: ${Math.max(14, state.readerFontSize - 3)}px;">
+                    ${c}
+                  </div>
+                `).join('')}
+              </div>
+            ` : ''}
+          </section>
+
+          <!-- כתיבת חידוש מתוך הקורא -->
+          <section class="app-card rounded-3xl p-4 space-y-2.5 shadow-sm">
+            <h3 class="font-extrabold text-sm">✍️ כתוב חידוש או הערה על לימוד זה:</h3>
+            <textarea id="readerNoteInput" rows="2" placeholder="הוסף תובנה או סיכום קצר שיישמר במחברת החידושים..." class="w-full rounded-2xl p-3 text-sm app-card-alt focus:outline-none"></textarea>
+            <button onclick="saveNoteFromReaderPage('${track.id}')" class="w-full py-3 rounded-2xl app-btn-secondary font-bold text-xs">
+              💾 שמור הערה במחברת החידושים
+            </button>
+          </section>
+
+          <!-- כפתור סיום גדול ובולט בתחתית הקורא -->
+          <button onclick="togglePortionCompleteFromReader('${track.id}')" class="w-full py-4 rounded-3xl font-extrabold text-base shadow-lg flex items-center justify-center gap-2 ${p.isCompleted ? 'app-btn-success' : 'app-btn-primary'}">
+            <span class="text-xl">${p.isCompleted ? '✓' : '🎉'}</span>
+            <span>${p.isCompleted ? 'סומן כ"נלמד היום"! (לחץ לביטול)' : 'סיימתי ללמוד – סמן "למדתי היום"!'}</span>
+          </button>
+
+        </div>
+      `;
+    }
+
+    // ==================== 6. פונקציות אינטראקציה לכל הכפתורים ====================
+    function shiftDate(deltaDays) {
+      const cur = new Date(state.selectedDateStr + 'T12:00:00');
+      cur.setDate(cur.getDate() + deltaDays);
+      state.selectedDateStr = toDateKey(cur);
+      tryFetchSefariaCalendar(state.selectedDateStr);
+      renderCurrentPage();
+    }
+
+    function goToToday() {
+      state.selectedDateStr = toDateKey(new Date());
+      tryFetchSefariaCalendar(state.selectedDateStr);
+      renderCurrentPage();
+      showToast('חזרת ללוח הלימוד של היום 📅');
+    }
+
+    function toggleBusyDayMode() {
+      state.busyDayMode = !state.busyDayMode;
+      saveState();
+      renderCurrentPage();
+      showToast(state.busyDayMode ? 'מצב "עמוס היום" הופעל – מוצגים לימודי ליבה בלבד ⚡' : 'מוצגים כל מסלולי הלימוד הפעילים 📚');
+    }
+
+    function setCategoryFilter(cat) {
+      state.categoryFilter = cat;
+      renderCurrentPage();
+    }
+
+    function resetTodayFilters() {
+      state.categoryFilter = 'הכל';
+      state.busyDayMode = false;
+      saveState();
+      renderCurrentPage();
+    }
+
+    function setCatalogFilter(cat) {
+      state.catalogFilter = cat;
+      renderCurrentPage();
+    }
+
+    function togglePortionComplete(trackId) {
+      const key = `${state.selectedDateStr}::${trackId}`;
+      state.completedMap[key] = !state.completedMap[key];
+      const track = state.tracks.find(t => t.id === trackId);
+      saveState();
+      renderCurrentPage();
+      if (state.completedMap[key] && track) {
+        showToast(`אשריך! "${track.titleHe}" סומן כנלמד ✓`);
+      }
+    }
+
+    function markAllTodayCompleted() {
+      const enabledTracks = state.tracks.filter(t => t.enabled && (!state.busyDayMode || t.isCore));
+      enabledTracks.forEach(t => {
+        state.completedMap[`${state.selectedDateStr}::${t.id}`] = true;
+      });
+      saveState();
+      renderCurrentPage();
+      showToast('כל מסלולי הלימוד של היום סומנו כנלמדים! 🎉');
+    }
+
+    function toggleTrackEnabled(trackId) {
+      const t = state.tracks.find(x => x.id === trackId);
+      if (!t) return;
+      t.enabled = !t.enabled;
+      saveState();
+      renderCurrentPage();
+      showToast(t.enabled ? `"${t.titleHe}" נוסף ללוח היומי ✓` : `"${t.titleHe}" הוסר מהלוח היומי`);
+    }
+
+    function setAllTracksEnabled(val) {
+      state.tracks.forEach(t => { t.enabled = val; });
+      saveState();
+      renderCurrentPage();
+      showToast('כל 18 הספרים הופעלו בלוח היומי! 📚');
+    }
+
+    function toggleTrackCore(trackId) {
+      const t = state.tracks.find(x => x.id === trackId);
+      if (!t) return;
+      t.isCore = !t.isCore;
+      saveState();
+      renderCurrentPage();
+      showToast(t.isCore ? 'הוגדר כלימוד ליבה ⭐' : 'הוסר מלימודי ליבה');
+    }
+
+    function moveTrack(idx, dir) {
+      const targetIdx = idx + dir;
+      if (targetIdx < 0 || targetIdx >= state.tracks.length) return;
+      const temp = state.tracks[idx];
+      state.tracks[idx] = state.tracks[targetIdx];
+      state.tracks[targetIdx] = temp;
+      state.tracks.forEach((t, i) => { t.order = i; });
+      saveState();
+      renderCurrentPage();
+    }
+
+    // פעולות דף תכנון קצב (Planner)
+    function selectPlannerTrack(trackId) {
+      state.plannerSelectedTrackId = trackId;
+      saveState();
+      renderCurrentPage();
+    }
+
+    function updatePlannerSubBook(subBookId) {
+      const track = state.tracks.find(t => t.id === state.plannerSelectedTrackId);
+      if (!track) return;
+      track.pace.subBookId = subBookId;
+      saveState();
+      renderCurrentPage();
+      showToast('הכרך / המסכת עודכנו בהצלחה 📖');
+    }
+
+    function setPlannerMode(mode) {
+      const track = state.tracks.find(t => t.id === state.plannerSelectedTrackId);
+      if (!track) return;
+      track.pace.mode = mode;
+      saveState();
+      renderCurrentPage();
+    }
+
+    function setPlannerTargetDays(days) {
+      const track = state.tracks.find(t => t.id === state.plannerSelectedTrackId);
+      if (!track) return;
+      track.pace.targetDays = days;
+      saveState();
+      renderCurrentPage();
+    }
+
+    function setPlannerDailyUnits(units) {
+      const track = state.tracks.find(t => t.id === state.plannerSelectedTrackId);
+      if (!track) return;
+      track.pace.dailyUnits = units;
+      saveState();
+      renderCurrentPage();
+    }
+
+    function setPlannerTargetDate(dateVal) {
+      const track = state.tracks.find(t => t.id === state.plannerSelectedTrackId);
+      if (!track || !dateVal) return;
+      track.pace.targetDate = dateVal;
+      saveState();
+      renderCurrentPage();
+    }
+
+    function togglePlannerExclude(dayType) {
+      const track = state.tracks.find(t => t.id === state.plannerSelectedTrackId);
+      if (!track) return;
+      if (dayType === 'friday') track.pace.excludeFriday = !track.pace.excludeFriday;
+      if (dayType === 'shabbat') track.pace.excludeShabbat = !track.pace.excludeShabbat;
+      saveState();
+      renderCurrentPage();
+    }
+
+    function recalculatePlannerFromToday() {
+      const track = state.tracks.find(t => t.id === state.plannerSelectedTrackId);
+      if (!track) return;
+      track.pace.startDate = toDateKey(new Date());
+      track.enabled = true;
+      saveState();
+      renderCurrentPage();
+      showToast('המסלול חושב מחדש מהיום והלאה! 🔄');
+    }
+
+    function saveAndGoTodayFromPlanner() {
+      const track = state.tracks.find(t => t.id === state.plannerSelectedTrackId);
+      if (track) track.enabled = true;
+      saveState();
+      showToast('תוכנית הסיום נשמרה בהצלחה! 💾');
+      navigateToPage('today');
+    }
+
+    // פעולות דף השלמות וחידושים
+    function setCatchupSubTab(tab) {
+      state.catchupSubTab = tab;
+      renderCurrentPage();
+    }
+
+    function completeMissedItem(dateKey, trackId) {
+      state.completedMap[`${dateKey}::${trackId}`] = true;
+      saveState();
+      renderCurrentPage();
+      showToast('הלימוד הושלם והוסר ממגירת ההשלמות! 🎉');
+    }
+
+    function openMissedInReader(dateKey, trackId) {
+      state.selectedDateStr = dateKey;
+      navigateToPage('reader', trackId);
+    }
+
+    function addDirectNote() {
+      const trackId = document.getElementById('newNoteTrackSelect')?.value;
+      const content = document.getElementById('newNoteTextarea')?.value.trim();
+      if (!content) {
+        showToast('אנא כתוב תוכן לחידוש לפני השמירה ✍️');
+        return;
+      }
+      const track = state.tracks.find(t => t.id === trackId) || state.tracks[0];
+      const p = computeDailyPortion(track, state.selectedDateStr);
+      state.notes.unshift({
+        id: Date.now(),
+        dateKey: state.selectedDateStr,
+        trackTitle: track.titleHe,
+        portionLabel: p.portionLabel,
+        content
+      });
+      saveState();
+      renderCurrentPage();
+      showToast('החידוש נשמר במחברת החידושים שלך! ✍️');
+    }
+
+    function deleteNote(idx) {
+      state.notes.splice(idx, 1);
+      saveState();
+      renderCurrentPage();
+      showToast('ההערה נמחקה');
+    }
+
+    // פעולות דף הקורא והגדרות
+    function changeReaderFont(delta) {
+      state.readerFontSize = Math.max(15, Math.min(32, state.readerFontSize + delta));
+      saveState();
+      renderCurrentPage();
+    }
+
+    function setReaderFontSize(size) {
+      state.readerFontSize = size;
+      saveState();
+      renderCurrentPage();
+      showToast(`גודל הגופן עודכן ל-${size}px`);
+    }
+
+    function toggleReaderCommentaries() {
+      state.showCommentaries = !state.showCommentaries;
+      saveState();
+      renderCurrentPage();
+    }
+
+    async function fetchLiveSefariaText(ref) {
+      showToast('טוען טקסט מלא ממאגר ספריא... 🌐');
+      try {
+        const resp = await fetch(`https://www.sefaria.org/api/texts/${encodeURIComponent(ref)}?context=0`);
+        if (resp.ok) {
+          const data = await resp.json();
+          const rawHe = data.he;
+          const flat = [];
+          const extract = (node) => {
+            if (typeof node === 'string') {
+              const clean = node.replace(/<[^>]*>/g, '').trim();
+              if (clean) flat.push(clean);
+            } else if (Array.isArray(node)) {
+              node.forEach(extract);
+            }
+          };
+          extract(rawHe);
+          if (flat.length > 0) {
+            state.liveTextCache[ref] = flat.slice(0, 25);
+            renderCurrentPage();
+            showToast('הטקסט המלא נטען מספריא בהצלחה! 📖');
+            return;
+          }
+        }
+      } catch (e) {}
+      showToast('מוצג הטקסט המובנה באפליקציה (ללא חיבור חיצוני)');
+    }
+
+    function saveNoteFromReaderPage(trackId) {
+      const content = document.getElementById('readerNoteInput')?.value.trim();
+      if (!content) {
+        showToast('כתוב תחילה את החידוש בתיבת הטקסט ✍️');
+        return;
+      }
+      const track = state.tracks.find(t => t.id === trackId);
+      const p = computeDailyPortion(track, state.selectedDateStr);
+      state.notes.unshift({
+        id: Date.now(),
+        dateKey: state.selectedDateStr,
+        trackTitle: track.titleHe,
+        portionLabel: p.portionLabel,
+        content
+      });
+      saveState();
+      document.getElementById('readerNoteInput').value = '';
+      showToast('החידוש נשמר במחברת החידושים! ✍️');
+    }
+
+    function togglePortionCompleteFromReader(trackId) {
+      togglePortionComplete(trackId);
+    }
+
+    function setReminderPreset(timeStr) {
+      state.reminderTime = timeStr;
+      saveState();
+      renderCurrentPage();
+      showToast(`תזכורת יומית הוגדרה לשעה ${timeStr} 🔔`);
+    }
+
+    // אתחול ראשוני
+    loadState();
+    tryFetchSefariaCalendar(state.selectedDateStr);
+    renderCurrentPage();
+  </script>
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', function() {
+        navigator.serviceWorker.register('sw.js').catch(function() {});
+      });
+    }
+  </script>
+</body>
+</html>
