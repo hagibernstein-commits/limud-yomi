@@ -4,7 +4,7 @@
   "description": "מעקב אחר הלימוד היומי: דף יומי, משנה יומית, תנ״ך יומי, רמב״ם, תניא ועוד, עם תזכורות ומחברת חידושים.",
   "lang": "he",
   "dir": "rtl",
-  "start_url": "./app.html",
+  "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",
   "orientation": "portrait",

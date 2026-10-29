@@ -2,7 +2,7 @@
 const CACHE_NAME = 'limud-yomi-v1';
 const APP_SHELL = [
   './',
-  './app.html',
+  './index.html',
   './manifest.webmanifest',
   './icon-192.png',
   './icon-512.png',
@@ -41,7 +41,7 @@ self.addEventListener('fetch', (event) => {
           caches.open(CACHE_NAME).then((cache) => cache.put(req, copy));
           return resp;
         })
-        .catch(() => caches.match(req).then((hit) => hit || caches.match('./app.html')).then((hit) => hit || caches.match('./')))
+        .catch(() => caches.match(req).then((hit) => hit || caches.match('./index.html')).then((hit) => hit || caches.match('./')))
     );
     return;
   }
