@@ -1,5 +1,5 @@
 /* הלימוד היומי שלי - Service Worker: מטמון מלא של מעטפת האפליקציה לעבודה אופליין */
-const CACHE_NAME = 'limud-yomi-v3';
+const CACHE_NAME = 'limud-yomi-v4';
 const APP_SHELL = [
   './',
   './index.html',
@@ -19,7 +19,7 @@ self.addEventListener('install', (event) => {
 self.addEventListener('activate', (event) => {
   event.waitUntil(
     caches.keys()
-      .then((keys) => Promise.all(keys.filter((k) => k !== CACHE_NAME).map((k) => caches.delete(k))))
+      .then((keys) => Promise.all(keys.filter((k) => k.startsWith('limud-yomi-') && k !== CACHE_NAME).map((k) => caches.delete(k))))
       .then(() => self.clients.claim())
   );
 });
@@ -44,7 +44,7 @@ self.addEventListener('fetch', (event) => {
   }
 
   // קריאות חיצוניות (למשל Sefaria) - רשת בלבד; האפליקציה כבר יודעת להתמודד עם כשל אופליין
-  if (url.origin !== self.location.origin) return;
+  if (url.origin !== self.location.origin || !url.href.startsWith(self.registration.scope)) return;
 
   // ניווטים: קודם רשת (כדי לקבל עדכונים), ואם אין חיבור - מעטפת מהמטמון
   if (req.mode === 'navigate') {
