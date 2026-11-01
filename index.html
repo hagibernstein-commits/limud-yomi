@@ -13,6 +13,7 @@
   <title>הלימוד היומי שלי</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://www.gstatic.com/antigravity/web/dev/tailwindcss.min.js"></script>
+  <script src="kosher-zmanim.min.js"></script>
   <style>
     * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
     .no-scrollbar::-webkit-scrollbar { display: none; }
@@ -953,6 +954,11 @@
       onboardingCompleted: false,
       showObBanner: false,
       plannerSelectedTrackId: 'kuzari',
+      zmanimLocMode: 'auto',      // 'auto' (GPS) | 'manual' (עיר / קואורדינטות)
+      zmanimCityId: 'jerusalem',
+      zmanimCustomLat: '',
+      zmanimCustomLon: '',
+      zmanimGeoCache: null,       // {lat, lon, alt, acc, ts} - מיקום GPS אחרון שאותר
       readerActiveTrackId: null,
       tracks: [],
       completedMap: {},
@@ -977,6 +983,11 @@
           state.lastCloudKey = parsed.lastCloudKey || '';
           state.lastSyncTimeStr = parsed.lastSyncTimeStr || '';
           state.plannerSelectedTrackId = parsed.plannerSelectedTrackId || 'kuzari';
+          state.zmanimLocMode = parsed.zmanimLocMode === 'manual' ? 'manual' : 'auto';
+          state.zmanimCityId = parsed.zmanimCityId || 'jerusalem';
+          state.zmanimCustomLat = parsed.zmanimCustomLat || '';
+          state.zmanimCustomLon = parsed.zmanimCustomLon || '';
+          state.zmanimGeoCache = parsed.zmanimGeoCache || null;
           state.userName = parsed.userName || '';
           state.onboardingCompleted = parsed.onboardingCompleted !== undefined ? parsed.onboardingCompleted : true;
           state.showObBanner = parsed.showObBanner !== undefined ? parsed.showObBanner : (parsed.onboardingCompleted === undefined);
@@ -1028,6 +1039,11 @@
         lastCloudKey: state.lastCloudKey,
         lastSyncTimeStr: state.lastSyncTimeStr,
         plannerSelectedTrackId: state.plannerSelectedTrackId,
+        zmanimLocMode: state.zmanimLocMode,
+        zmanimCityId: state.zmanimCityId,
+        zmanimCustomLat: state.zmanimCustomLat,
+        zmanimCustomLon: state.zmanimCustomLon,
+        zmanimGeoCache: state.zmanimGeoCache,
         userName: state.userName,
         onboardingCompleted: state.onboardingCompleted,
         showObBanner: state.showObBanner,
@@ -1416,6 +1432,161 @@
       }
     }
 
+
+    // ==================== זמני היום (חישוב מקומי לפי מיקום, עובד גם אופליין) ====================
+    // רשימת יישובים לבחירה ידנית: שם, קו רוחב, קו אורך, גובה במטרים (משפיע על נץ/שקיעה)
+    const ZMANIM_CITIES = [
+      { id: 'jerusalem', name: 'ירושלים', lat: 31.7683, lon: 35.2137, elev: 754 },
+      { id: 'kfar_etzion', name: 'כפר עציון (גוש עציון)', lat: 31.6490, lon: 35.1150, elev: 950 },
+      { id: 'beit_shemesh', name: 'בית שמש', lat: 31.7457, lon: 34.9867, elev: 300 },
+      { id: 'tel_aviv', name: 'תל אביב-יפו', lat: 32.0853, lon: 34.7818, elev: 25 },
+      { id: 'bnei_brak', name: 'בני ברק', lat: 32.0868, lon: 34.8338, elev: 35 },
+      { id: 'petah_tikva', name: 'פתח תקווה', lat: 32.0840, lon: 34.8878, elev: 50 },
+      { id: 'netanya', name: 'נתניה', lat: 32.3215, lon: 34.8532, elev: 35 },
+      { id: 'modiin', name: 'מודיעין-מכבים-רעות', lat: 31.8970, lon: 35.0106, elev: 280 },
+      { id: 'modiin_illit', name: 'מודיעין עילית', lat: 31.9326, lon: 35.0426, elev: 320 },
+      { id: 'haifa', name: 'חיפה', lat: 32.7940, lon: 34.9896, elev: 150 },
+      { id: 'tzfat', name: 'צפת', lat: 32.9646, lon: 35.4960, elev: 900 },
+      { id: 'tiberias', name: 'טבריה', lat: 32.7959, lon: 35.5310, elev: -200 },
+      { id: 'beer_sheva', name: 'באר שבע', lat: 31.2518, lon: 34.7913, elev: 260 },
+      { id: 'ashdod', name: 'אשדוד', lat: 31.8044, lon: 34.6553, elev: 30 },
+      { id: 'yericho', name: 'יריחו', lat: 31.8611, lon: 35.4617, elev: -258 },
+      { id: 'eilat', name: 'אילת', lat: 29.5577, lon: 34.9519, elev: 12 }
+    ];
+
+    function resolveZmanimLocation() {
+      const tzDevice = (Intl.DateTimeFormat().resolvedOptions().timeZone) || 'Asia/Jerusalem';
+      if (state.zmanimLocMode === 'auto' && state.zmanimGeoCache && isFinite(state.zmanimGeoCache.lat) && isFinite(state.zmanimGeoCache.lon)) {
+        return { lat: state.zmanimGeoCache.lat, lon: state.zmanimGeoCache.lon, elev: state.zmanimGeoCache.alt || 0, tz: tzDevice, label: 'המיקום הנוכחי (GPS)', source: 'gps' };
+      }
+      if (state.zmanimLocMode === 'manual') {
+        if (state.zmanimCityId === 'custom') {
+          const lat = parseFloat(state.zmanimCustomLat), lon = parseFloat(state.zmanimCustomLon);
+          if (isFinite(lat) && isFinite(lon)) {
+            return { lat: lat, lon: lon, elev: 0, tz: 'Asia/Jerusalem', label: 'קואורדינטות מותאמות', source: 'custom' };
+          }
+        } else {
+          const city = ZMANIM_CITIES.find(c => c.id === state.zmanimCityId);
+          if (city) return { lat: city.lat, lon: city.lon, elev: city.elev, tz: 'Asia/Jerusalem', label: city.name, source: 'city' };
+        }
+      }
+      const jl = ZMANIM_CITIES[0];
+      return { lat: jl.lat, lon: jl.lon, elev: jl.elev, tz: 'Asia/Jerusalem', label: 'ירושלים (ברירת מחדל)', source: 'default' };
+    }
+
+    function computeZmanimForDate(dateStr, loc) {
+      if (typeof KosherZmanim === 'undefined') return null;
+      try {
+        const geo = new KosherZmanim.GeoLocation(loc.label, loc.lat, loc.lon, loc.elev || 0, loc.tz);
+        const cal = new KosherZmanim.ComplexZmanimCalendar(geo);
+        cal.setDate(KosherZmanim.DateTime.fromISO(dateStr, { zone: loc.tz }));
+        const fmt = function(dt) { return dt ? dt.plus({ seconds: 30 }).setZone(loc.tz).toFormat('HH:mm') : '—'; };
+        const tzais85 = (typeof cal.getTzaisGeonim8Point5Degrees === 'function') ? cal.getTzaisGeonim8Point5Degrees() : cal.getTzais72();
+        const rows = [
+          { label: 'עלות השחר', dt: cal.getAlos72() },
+          { label: 'נץ החמה', dt: cal.getSunrise() },
+          { label: 'סוף זמן קריאת שמע (מג"א)', dt: cal.getSofZmanShmaMGA() },
+          { label: 'סוף זמן קריאת שמע (גר"א)', dt: cal.getSofZmanShmaGRA() },
+          { label: 'סוף זמן תפילה (גר"א)', dt: cal.getSofZmanTfilaGRA() },
+          { label: 'חצות היום', dt: cal.getChatzos() },
+          { label: 'מנחה גדולה', dt: cal.getMinchaGedola() },
+          { label: 'מנחה קטנה', dt: cal.getMinchaKetana() },
+          { label: 'שקיעה', dt: cal.getSunset() },
+          { label: 'צאת הכוכבים', dt: tzais85 },
+          { label: 'צאת הכוכבים (רבינו תם)', dt: cal.getTzais72Zmanis() }
+        ];
+        return rows.map(z => ({ label: z.label, timeStr: fmt(z.dt), jsDate: z.dt ? z.dt.setZone(loc.tz).toJSDate() : null }));
+      } catch (e) {
+        return null;
+      }
+    }
+
+    function requestZmanimGeolocation() {
+      if (!('geolocation' in navigator)) {
+        showToast('המכשיר לא תומך באיתור מיקום - בחר יישוב ידנית בהגדרות');
+        return;
+      }
+      showToast('מאתר את המיקום... 📍');
+      navigator.geolocation.getCurrentPosition(function(pos) {
+        state.zmanimGeoCache = {
+          lat: pos.coords.latitude,
+          lon: pos.coords.longitude,
+          alt: pos.coords.altitude || 0,
+          acc: pos.coords.accuracy || null,
+          ts: Date.now()
+        };
+        saveState();
+        renderCurrentPage();
+        showToast('המיקום אותר והזמנים עודכנו ✓');
+      }, function() {
+        showToast('לא הצלחתי לאתר מיקום - מוצגת ברירת המחדל (ירושלים)');
+        renderCurrentPage();
+      }, { enableHighAccuracy: false, timeout: 10000, maximumAge: 30 * 60 * 1000 });
+    }
+
+    function setZmanimLocMode(mode) {
+      state.zmanimLocMode = (mode === 'manual') ? 'manual' : 'auto';
+      saveState();
+      if (state.zmanimLocMode === 'auto' && !state.zmanimGeoCache) {
+        requestZmanimGeolocation();
+      } else {
+        renderCurrentPage();
+      }
+    }
+
+    function setZmanimCity(id) {
+      state.zmanimCityId = id || 'jerusalem';
+      saveState();
+      renderCurrentPage();
+    }
+
+    function setZmanimCustom(lat, lon) {
+      state.zmanimCustomLat = String(lat || '').slice(0, 14);
+      state.zmanimCustomLon = String(lon || '').slice(0, 14);
+      saveState();
+      renderCurrentPage();
+    }
+
+    function renderZmanimCardHtml() {
+      const loc = resolveZmanimLocation();
+      const zmanim = computeZmanimForDate(state.selectedDateStr, loc);
+      const isToday = state.selectedDateStr === toDateKey(new Date());
+      let nextIdx = -1;
+      if (isToday && zmanim) {
+        const now = new Date();
+        for (let i = 0; i < zmanim.length; i++) {
+          if (zmanim[i].jsDate && zmanim[i].jsDate > now) { nextIdx = i; break; }
+        }
+      }
+      return `
+        <section class="app-card rounded-3xl p-4 shadow-sm space-y-3">
+          <div class="flex items-center justify-between gap-2">
+            <h3 class="font-extrabold text-base flex items-center gap-2">
+              <span>🕒</span>
+              <span>זמני היום${isToday ? '' : ' - ' + formatDisplayGregorian(state.selectedDateStr)}</span>
+            </h3>
+            <button onclick="requestZmanimGeolocation()" class="px-2.5 py-1.5 rounded-xl app-btn-secondary text-xs font-bold shrink-0" title="אתר את מיקומי ועדכן זמנים">📍 אתר אותי</button>
+          </div>
+          <div class="text-xs app-text-muted font-semibold flex items-center justify-between gap-2">
+            <span>מחושב עבור: ${escapeHtml(loc.label)}</span>
+            <button onclick="navigateToPage('settings')" class="underline font-bold shrink-0" style="color: var(--app-primary);">שנה מיקום</button>
+          </div>
+          ${zmanim ? `
+            <div class="grid grid-cols-2 gap-x-3 gap-y-1.5">
+              ${zmanim.map((z, i) => `
+                <div class="flex items-center justify-between gap-1 px-2.5 py-1.5 rounded-xl ${i === nextIdx ? 'app-btn-primary shadow-sm' : ''}">
+                  <span class="text-xs font-bold">${z.label}</span>
+                  <span class="text-sm font-extrabold tracking-wide shrink-0">${z.timeStr}</span>
+                </div>
+              `).join('')}
+            </div>
+          ` : `
+            <div class="text-xs app-text-muted leading-relaxed">הזמנים יוצגו לאחר שהטלפון יטען פעם אחת את ספריית הזמנים מהאינטרנט (לאחר מכן עובד גם אופליין).</div>
+          `}
+        </section>
+      `;
+    }
+
     // ==================== דף 1: הלימוד היום (לוח יומי) ====================
     function renderTodayPage(container) {
       const selDate = new Date(state.selectedDateStr + 'T12:00:00');
@@ -1521,6 +1692,8 @@
               </span>
             </button>
           </section>
+
+          ${renderZmanimCardHtml()}
 
           <!-- סרגל סינון קטגוריות עם כפתורים נוחים -->
           <div class="flex gap-2 overflow-x-auto no-scrollbar py-1">
@@ -2095,6 +2268,42 @@
                 <input type="file" accept=".json" onchange="importBackupJsonFile(event)" class="hidden">
               </label>
             </div>
+          </section>
+
+          <!-- 1.5 מיקום לחישוב זמני היום -->
+          <section class="app-card rounded-3xl p-4 space-y-3.5 shadow-sm">
+            <h2 class="font-extrabold text-base flex items-center gap-2">
+              <span>📍</span>
+              <span>מיקום לחישוב זמני היום</span>
+            </h2>
+            <p class="text-xs app-text-muted leading-relaxed">הזמנים מחושבים מקומית בטלפון (גם בלי אינטרנט) לפי המיקום שתבחר. כשאין איתור GPS - מוצגת ירושלים כברירת מחדל.</p>
+            <div class="grid grid-cols-2 gap-2">
+              <button onclick="setZmanimLocMode('auto')" class="py-3 px-2 rounded-2xl font-bold text-xs ${state.zmanimLocMode === 'auto' ? 'app-btn-primary' : 'app-btn-secondary'}">📡 אוטומטי (GPS)</button>
+              <button onclick="setZmanimLocMode('manual')" class="py-3 px-2 rounded-2xl font-bold text-xs ${state.zmanimLocMode === 'manual' ? 'app-btn-primary' : 'app-btn-secondary'}">🏙️ בחירה ידנית</button>
+            </div>
+            ${state.zmanimLocMode === 'auto' ? `
+              <button onclick="requestZmanimGeolocation()" class="w-full py-3 rounded-2xl app-btn-primary font-extrabold text-sm">📍 אתר את מיקומי עכשיו</button>
+              ${state.zmanimGeoCache ? `
+                <div class="text-xs app-text-muted">מיקום אחרון שאותר: ${Number(state.zmanimGeoCache.lat).toFixed(4)}, ${Number(state.zmanimGeoCache.lon).toFixed(4)}${state.zmanimGeoCache.acc ? ' (דיוק ~' + Math.round(state.zmanimGeoCache.acc) + ' מ\')' : ''}</div>
+              ` : `
+                <div class="text-xs app-text-muted">עדיין לא אותר מיקום בטלפון זה - מוצגת ירושלים כברירת מחדל.</div>
+              `}
+            ` : `
+              <div class="space-y-2">
+                <label class="text-xs font-bold block">בחר יישוב:</label>
+                <select onchange="setZmanimCity(this.value)" class="w-full rounded-2xl p-3 text-sm font-bold app-card-alt focus:outline-none">
+                  ${ZMANIM_CITIES.map(c => `<option value="${c.id}" ${state.zmanimCityId === c.id ? 'selected' : ''}>${c.name}</option>`).join('')}
+                  <option value="custom" ${state.zmanimCityId === 'custom' ? 'selected' : ''}>✍️ קואורדינטות מותאמות אישית</option>
+                </select>
+              </div>
+              ${state.zmanimCityId === 'custom' ? `
+                <div class="grid grid-cols-2 gap-2">
+                  <input type="number" step="any" placeholder="קו רוחב (lat)" value="${escapeHtml(state.zmanimCustomLat)}" onchange="setZmanimCustom(this.value, state.zmanimCustomLon)" class="rounded-2xl p-3 text-sm font-bold app-card-alt focus:outline-none">
+                  <input type="number" step="any" placeholder="קו אורך (lon)" value="${escapeHtml(state.zmanimCustomLon)}" onchange="setZmanimCustom(state.zmanimCustomLat, this.value)" class="rounded-2xl p-3 text-sm font-bold app-card-alt focus:outline-none">
+                </div>
+                <div class="text-xs app-text-muted leading-relaxed">למשל ירושלים: 31.77, 35.21. מתאים ליישובים בישראל (אזור הזמן של ישראל).</div>
+              ` : ''}
+            `}
           </section>
 
           <!-- 2. מערכת תזכורות יומיות אמיתית ופועלת (יומן הטלפון + התראות דפדפן + צליל) -->

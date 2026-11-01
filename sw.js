@@ -1,11 +1,12 @@
 /* הלימוד היומי שלי - Service Worker: מטמון מלא של מעטפת האפליקציה לעבודה אופליין */
-const CACHE_NAME = 'limud-yomi-v5';
+const CACHE_NAME = 'limud-yomi-v6';
 const APP_SHELL = [
   './',
   './index.html',
   './manifest.webmanifest',
   './icon-192.png',
-  './icon-512.png'
+  './icon-512.png',
+  './kosher-zmanim.min.js'
 ];
 
 const RUNTIME_CACHE_HOSTS = ['cdn.tailwindcss.com', 'www.gstatic.com'];
