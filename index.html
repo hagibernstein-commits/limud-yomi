@@ -949,6 +949,9 @@
       lastCloudKey: '',
       lastSyncTimeStr: '',
       syncStatusMsg: 'טרם הוגדר מזהה סנכרון',
+      userName: '',
+      onboardingCompleted: false,
+      showObBanner: false,
       plannerSelectedTrackId: 'kuzari',
       readerActiveTrackId: null,
       tracks: [],
@@ -974,6 +977,9 @@
           state.lastCloudKey = parsed.lastCloudKey || '';
           state.lastSyncTimeStr = parsed.lastSyncTimeStr || '';
           state.plannerSelectedTrackId = parsed.plannerSelectedTrackId || 'kuzari';
+          state.userName = parsed.userName || '';
+          state.onboardingCompleted = parsed.onboardingCompleted !== undefined ? parsed.onboardingCompleted : true;
+          state.showObBanner = parsed.showObBanner !== undefined ? parsed.showObBanner : (parsed.onboardingCompleted === undefined);
           state.completedMap = parsed.completedMap || {};
           state.notes = parsed.notes || [];
 
@@ -1022,6 +1028,9 @@
         lastCloudKey: state.lastCloudKey,
         lastSyncTimeStr: state.lastSyncTimeStr,
         plannerSelectedTrackId: state.plannerSelectedTrackId,
+        userName: state.userName,
+        onboardingCompleted: state.onboardingCompleted,
+        showObBanner: state.showObBanner,
         completedMap: state.completedMap,
         notes: state.notes,
         tracks: state.tracks.map(t => ({
@@ -1104,6 +1113,26 @@
       window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
         if (state.themeMode === 'system') applyThemeToDOM();
       });
+    }
+
+    function escapeHtml(s) {
+      return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+    }
+
+    function greetingForNow() {
+      const h = new Date().getHours();
+      if (h < 5) return 'לילה טוב';
+      if (h < 12) return 'בוקר טוב';
+      if (h < 17) return 'צהריים טובים';
+      if (h < 21) return 'ערב טוב';
+      return 'לילה טוב';
+    }
+
+    function setUserName(v) {
+      state.userName = String(v || '').trim().slice(0, 30);
+      saveState();
+      renderCurrentPage();
+      showToast(state.userName ? 'נעים מאוד, ' + state.userName + '! 👋' : 'השם הוסר');
     }
 
     function showToast(msg) {
@@ -1347,7 +1376,7 @@
 
       // עדכון כותרות הסרגל העליון לפי הדף הנוכחי
       const titles = {
-        today: ['הלימוד היומי שלי', 'לוח לימוד יומי מותאם אישית'],
+        today: [state.userName ? 'הלימוד היומי של ' + state.userName : 'הלימוד היומי שלי', 'לוח לימוד יומי מותאם אישית'],
         catalog: ['בחירת ספרים ומסלולים', 'הפעל או כבה ספרים וקבע את סדרם'],
         planner: ['תכנון קצב וזמן סיום', 'קבע בכמה זמן תרצה לסיים כל ספר וכרך'],
         catchup: ['השלמות ומחברת חידושים', 'מעקב חובות לימוד וכתיבת חידושי תורה'],
@@ -1411,6 +1440,34 @@
       container.innerHTML = `
         <div class="page-animate space-y-4">
 
+          ${state.showObBanner ? `
+          <section class="app-card rounded-3xl p-4 shadow-sm space-y-3" style="border-color: var(--app-primary); border-width: 2px;">
+            <div class="flex items-start gap-3">
+              <span class="text-3xl">✨</span>
+              <div class="flex-1 space-y-1">
+                <div class="font-extrabold text-base">חדש! שאלון העדפות אישי</div>
+                <p class="text-xs app-text-muted leading-relaxed">בחר אילו ספרים ללמוד, באיזה קצב יומי ומהיכן להתחיל - והלוח היומי יתאים את עצמו אליך. כל ההתקדמות שלך נשמרת!</p>
+              </div>
+            </div>
+            <div class="grid grid-cols-2 gap-2">
+              <button onclick="openOnboarding('settings')" class="py-3 rounded-2xl app-btn-primary font-extrabold text-sm">📝 מלא את השאלון</button>
+              <button onclick="dismissObBanner()" class="py-3 rounded-2xl app-btn-secondary font-bold text-sm">אולי אחר כך</button>
+            </div>
+          </section>
+          ` : ''}
+
+          ${state.userName ? `
+          <section class="app-card rounded-3xl p-4 shadow-sm">
+            <div class="flex items-center gap-3">
+              <span class="text-3xl">🌟</span>
+              <div>
+                <div class="font-extrabold text-lg">${greetingForNow()}, ${escapeHtml(state.userName)}!</div>
+                <div class="text-xs app-text-muted font-semibold">יום נעים לקבוע עיתים לתורה 📖</div>
+              </div>
+            </div>
+          </section>
+          ` : ''}
+
           <!-- כרטיס תאריך עברי וניווט מהיר בין ימים עם כפתורים גדולים -->
           <section class="app-card rounded-3xl p-4 shadow-sm space-y-3.5">
             <div class="text-center space-y-1">
@@ -1448,7 +1505,7 @@
                 <div class="h-full transition-all duration-300 rounded-full" style="width: ${pctToday}%; background-color: var(--app-success);"></div>
               </div>
               <div class="flex items-center justify-between text-xs app-text-muted font-semibold pt-0.5">
-                <span>${remainingMins === 0 && totalCount > 0 ? '🎉 אשריך! השלמת את כל הקביעות להיום!' : `⏱️ זמן לימוד משוער שנותר: כ-${remainingMins} דקות`}</span>
+                <span>${remainingMins === 0 && totalCount > 0 ? (state.userName ? '🎉 אשריך, ' + escapeHtml(state.userName) + '! השלמת את כל הקביעות להיום!' : '🎉 אשריך! השלמת את כל הקביעות להיום!') : `⏱️ זמן לימוד משוער שנותר: כ-${remainingMins} דקות`}</span>
                 ${doneCount < totalCount && totalCount > 0 ? `<button onclick="markAllTodayCompleted()" class="underline font-bold" style="color: var(--app-primary);">סמן הכל כנלמד</button>` : ''}
               </div>
             </div>
@@ -1953,6 +2010,23 @@
 
       container.innerHTML = `
         <div class="page-animate space-y-4">
+
+          <!-- 0. הפרופיל האישי ושאלון ההעדפות -->
+          <section class="app-card rounded-3xl p-4 space-y-3.5 shadow-sm" style="border-color: var(--app-primary); border-width: 2px;">
+            <h2 class="font-extrabold text-base flex items-center gap-2">
+              <span>👤</span>
+              <span>הפרופיל שלי${state.userName ? ': ' + escapeHtml(state.userName) : ''}</span>
+            </h2>
+            <div class="space-y-2">
+              <label class="text-xs font-bold block">השם הפרטי שלך (יופיע בברכות ברחבי האפליקציה):</label>
+              <input type="text" value="${escapeHtml(state.userName)}" placeholder="למשל: חגי" onchange="setUserName(this.value)" class="w-full rounded-2xl p-3 text-base font-bold app-card-alt focus:outline-none">
+            </div>
+            <button onclick="openOnboarding('settings')" class="w-full py-3.5 px-4 rounded-2xl app-btn-primary font-extrabold text-sm flex items-center justify-center gap-2 shadow-sm">
+              <span>📝</span>
+              <span>פתח את שאלון ההעדפות (ספרים, קצב ונקודת התחלה)</span>
+            </button>
+            <p class="text-xs app-text-muted leading-relaxed">השאלון קובע אילו ספרים מופיעים בלוח היומי, באיזה קצב יומי ומהיכן הלימוד מתחיל - ואפשר לחזור ולעדכן אותו בכל עת.</p>
+          </section>
 
           <!-- 1. סנכרון ענן אמיתי בין מכשירים (Cloud Sync) -->
           <section class="app-card rounded-3xl p-4 space-y-3.5 shadow-sm" style="border-color: var(--app-primary); border-width: 2px;">
@@ -2874,6 +2948,8 @@
       if (cloud.themeMode) state.themeMode = cloud.themeMode;
       if (cloud.readerFontSize) state.readerFontSize = cloud.readerFontSize;
       if (cloud.reminderTime) state.reminderTime = cloud.reminderTime;
+      if (cloud.userName) state.userName = cloud.userName;
+      if (cloud.onboardingCompleted) state.onboardingCompleted = true;
       applyThemeToDOM();
     }
 
@@ -2985,11 +3061,415 @@
       reader.readAsText(file);
     }
 
+    // ==================== שאלון היכרות אישי (Onboarding) ====================
+    let ob = null;
+
+    function ensureOnboardingRoot() {
+      let el = document.getElementById('onboardingOverlay');
+      if (!el) {
+        el = document.createElement('div');
+        el.id = 'onboardingOverlay';
+        el.className = 'hidden fixed inset-0 z-40 overflow-y-auto';
+        el.style.backgroundColor = 'var(--app-bg)';
+        const root = document.getElementById('appRoot');
+        (root || document.body).appendChild(el);
+      }
+      return el;
+    }
+
+    function openOnboarding(source) {
+      ob = { source: source || 'first', step: 0, name: state.userName || '', sel: {} };
+      if (ob.source !== 'first') {
+        state.tracks.forEach(t => {
+          if (t.enabled) {
+            ob.sel[t.id] = {
+              subBookId: t.pace.subBookId,
+              mode: (t.pace.mode === 'global') ? 'global' : (t.pace.mode === 'daily' ? 'daily' : 'days'),
+              dailyUnits: t.pace.dailyUnits || 1,
+              targetDays: t.pace.targetDays || 365,
+              gemaraUnit: t.pace.gemaraUnit || 'daf',
+              rangeFrom: t.pace.rangeFrom || null
+            };
+          }
+        });
+      }
+      renderOnboarding();
+    }
+
+    function closeOnboarding() {
+      const el = document.getElementById('onboardingOverlay');
+      if (el) el.classList.add('hidden');
+      ob = null;
+      renderCurrentPage();
+    }
+
+    function skipOnboarding() {
+      state.onboardingCompleted = true;
+      state.showObBanner = false;
+      saveState();
+      closeOnboarding();
+      showToast('אפשר לחזור לשאלון בכל עת מדף ההגדרות ⚙️');
+    }
+
+    function dismissObBanner() {
+      state.showObBanner = false;
+      saveState();
+      renderCurrentPage();
+    }
+
+    function obSetName(v) { ob.name = v; }
+
+    function obToggleTrack(trackId) {
+      if (ob.sel[trackId]) {
+        delete ob.sel[trackId];
+      } else {
+        const t = state.tracks.find(x => x.id === trackId);
+        if (!t) return;
+        ob.sel[trackId] = {
+          subBookId: t.pace.subBookId,
+          mode: (t.pace.mode === 'global') ? 'global' : (t.pace.mode === 'daily' ? 'daily' : 'days'),
+          dailyUnits: t.pace.dailyUnits || 1,
+          targetDays: t.pace.targetDays || 365,
+          gemaraUnit: t.pace.gemaraUnit || 'daf',
+          rangeFrom: null
+        };
+      }
+      renderOnboarding();
+    }
+
+    // הקשר חישוב למסלול בתוך השאלון (כולל יחידת דף/עמוד זמנית בגמרא)
+    function obCtx(track) {
+      const s = ob.sel[track.id];
+      const tCopy = Object.assign({}, track, { pace: Object.assign({}, track.pace, { gemaraUnit: s.gemaraUnit }) });
+      const base = track.subBooks.find(sb => sb.id === s.subBookId) || track.subBooks[0];
+      const full = fullUnitsOf(tCopy, base);
+      const sbSel = Object.assign({}, base, { fullUnits: full });
+      return { s, tCopy, base, full, sbSel };
+    }
+
+    function obUnitPlural(track, s) {
+      if (track.id === 'gemara_bavli') return (s && s.gemaraUnit === 'amud') ? 'עמודים' : 'דפים';
+      return track.unitPlural;
+    }
+
+    function obSetSubBook(trackId, v) {
+      const s = ob.sel[trackId]; if (!s) return;
+      s.subBookId = v; s.rangeFrom = null;
+      const track = state.tracks.find(x => x.id === trackId);
+      if (s.mode === 'global' && track && v !== track.subBooks[0].id) s.mode = 'daily';
+      renderOnboarding();
+    }
+
+    function obSetGemaraUnit(trackId, v) {
+      const s = ob.sel[trackId]; if (!s) return;
+      s.gemaraUnit = v; s.rangeFrom = null;
+      if (v === 'amud' && s.mode === 'global') s.mode = 'daily';
+      renderOnboarding();
+    }
+
+    function obSetMode(trackId, v) {
+      const s = ob.sel[trackId]; if (!s) return;
+      s.mode = v;
+      renderOnboarding();
+    }
+
+    function obSetDailyUnits(trackId, v) {
+      const s = ob.sel[trackId]; if (!s) return;
+      s.dailyUnits = Math.max(1, parseInt(v, 10) || 1);
+      renderOnboarding();
+    }
+
+    function obSetDays(trackId, v) {
+      const s = ob.sel[trackId]; if (!s) return;
+      s.targetDays = Math.max(7, parseInt(v, 10) || 365);
+      renderOnboarding();
+    }
+
+    function obSetRangeFrom(trackId, v) {
+      const s = ob.sel[trackId]; if (!s) return;
+      const n = parseInt(v, 10);
+      s.rangeFrom = n > 1 ? n : null;
+      renderOnboarding();
+    }
+
+    function obSetTheme(mode) {
+      state.themeMode = mode;
+      saveState(true);
+      applyThemeToDOM();
+      renderOnboarding();
+    }
+
+    function obSetReminder(t) {
+      state.reminderTime = t;
+      state.reminderEnabled = true;
+      saveState(true);
+      renderOnboarding();
+    }
+
+    function obNext() {
+      if (ob.step === 1 && Object.keys(ob.sel).length === 0) {
+        showToast('בחר לפחות ספר אחד כדי להמשיך 📚');
+        return;
+      }
+      ob.step = Math.min(3, ob.step + 1);
+      renderOnboarding();
+    }
+
+    function obBack() {
+      ob.step = Math.max(0, ob.step - 1);
+      renderOnboarding();
+    }
+
+    function obPaceText(track) {
+      const { s, full } = obCtx(track);
+      const unitPl = obUnitPlural(track, s);
+      const left = Math.max(1, full - ((s.rangeFrom || 1) - 1));
+      if (s.mode === 'global') return 'לפי הלוח העולמי הקבוע';
+      if (s.mode === 'days') {
+        const perDay = left / Math.max(1, s.targetDays);
+        return `סיום תוך ${s.targetDays} ימים • כ-${perDay.toFixed(1)} ${unitPl} ביום`;
+      }
+      const days = Math.ceil(left / Math.max(0.25, s.dailyUnits));
+      const unitNow = s.dailyUnits === 1 ? (track.id === 'gemara_bavli' ? (s.gemaraUnit === 'amud' ? 'עמוד' : 'דף') : track.unitSingular) : unitPl;
+      return `${s.dailyUnits} ${unitNow} ביום • סיום משוער בעוד כ-${days} ימים`;
+    }
+
+    function renderObTrackCard(track) {
+      const { s, tCopy, sbSel, full } = obCtx(track);
+      const unitPl = obUnitPlural(track, s);
+      const isGem = track.id === 'gemara_bavli';
+      const canGlobal = !!track.sefariaCalendarTitle && s.subBookId === track.subBooks[0].id && !s.rangeFrom && !(isGem && s.gemaraUnit === 'amud');
+      const canRange = (sbSel.kind === 'gemara' || sbSel.kind === 'mishnah' || sbSel.kind === 'chapters' || full <= 400) && full <= 400 && full > 1;
+
+      let rangeHtml = '';
+      if (canRange && s.mode !== 'global') {
+        let opts = `<option value="1">מההתחלה (${unitLabelAt(tCopy, sbSel, 1)})</option>`;
+        for (let i = 2; i <= full; i++) opts += `<option value="${i}" ${s.rangeFrom === i ? 'selected' : ''}>${unitLabelAt(tCopy, sbSel, i)}</option>`;
+        rangeHtml = `
+          <div class="space-y-1.5 pt-1">
+            <label class="text-xs font-bold app-text-muted block">נקודת התחלה בספר (רשות):</label>
+            <select onchange="obSetRangeFrom('${track.id}', this.value)" class="w-full rounded-2xl p-3 text-sm font-bold app-card-alt focus:outline-none">${opts}</select>
+          </div>`;
+      }
+
+      const dailyPresets = [1, 2, 3, 4, 5];
+      const dayPresets = [30, 90, 180, 365, 730];
+
+      return `
+        <section class="app-card rounded-3xl p-4 space-y-3 shadow-sm" style="border-color: var(--app-primary); border-width: 1.5px;">
+          <h3 class="font-extrabold text-sm flex items-center gap-2"><span>${track.icon}</span><span>${track.titleHe}</span></h3>
+
+          <div class="space-y-1.5">
+            <label class="text-xs font-bold app-text-muted block">מאיפה מתחילים? (${isGem ? 'בחר מסכת' : track.id === 'mishna_yomit' ? 'בחר סדר או מסכת' : 'בחר כרך / ספר'}):</label>
+            <select onchange="obSetSubBook('${track.id}', this.value)" class="w-full rounded-2xl p-3 text-sm font-bold app-card-alt focus:outline-none">
+              ${renderSubBookOptions(track, { subBookId: s.subBookId })}
+            </select>
+          </div>
+
+          ${isGem ? `
+            <div class="grid grid-cols-2 gap-2">
+              <button onclick="obSetGemaraUnit('${track.id}', 'daf')" class="py-2.5 rounded-2xl font-extrabold text-xs ${s.gemaraUnit !== 'amud' ? 'app-btn-primary' : 'app-btn-secondary'}">📜 דף ביום</button>
+              <button onclick="obSetGemaraUnit('${track.id}', 'amud')" class="py-2.5 rounded-2xl font-extrabold text-xs ${s.gemaraUnit === 'amud' ? 'app-btn-primary' : 'app-btn-secondary'}">📄 עמוד ביום</button>
+            </div>
+          ` : ''}
+
+          <div class="space-y-1.5">
+            <label class="text-xs font-bold app-text-muted block">קצב הלימוד היומי:</label>
+            <div class="grid ${canGlobal ? 'grid-cols-3' : 'grid-cols-2'} gap-2">
+              ${canGlobal ? `<button onclick="obSetMode('${track.id}', 'global')" class="py-2.5 px-1 rounded-2xl font-extrabold text-xs ${s.mode === 'global' ? 'app-btn-primary' : 'app-btn-secondary'}">🌍 הלוח העולמי</button>` : ''}
+              <button onclick="obSetMode('${track.id}', 'daily')" class="py-2.5 px-1 rounded-2xl font-extrabold text-xs ${s.mode === 'daily' ? 'app-btn-primary' : 'app-btn-secondary'}">📖 כמות קבועה ביום</button>
+              <button onclick="obSetMode('${track.id}', 'days')" class="py-2.5 px-1 rounded-2xl font-extrabold text-xs ${s.mode === 'days' ? 'app-btn-primary' : 'app-btn-secondary'}">📆 סיום בזמן קצוב</button>
+            </div>
+          </div>
+
+          ${s.mode === 'daily' ? `
+            <div class="grid grid-cols-5 gap-1.5">
+              ${dailyPresets.map(u => `<button onclick="obSetDailyUnits('${track.id}', ${u})" class="py-2.5 rounded-2xl font-bold text-sm ${s.dailyUnits === u ? 'app-btn-primary' : 'app-btn-secondary'}">${u}</button>`).join('')}
+            </div>
+            <div class="text-[11px] app-text-muted font-bold text-center">${unitPl} בכל יום</div>
+          ` : ''}
+
+          ${s.mode === 'days' ? `
+            <div class="grid grid-cols-5 gap-1.5">
+              ${dayPresets.map(d => `<button onclick="obSetDays('${track.id}', ${d})" class="py-2.5 rounded-2xl font-bold text-xs ${s.targetDays === d ? 'app-btn-primary' : 'app-btn-secondary'}">${d === 365 ? 'שנה' : d === 730 ? 'שנתיים' : d + ' יום'}</button>`).join('')}
+            </div>
+          ` : ''}
+
+          ${rangeHtml}
+
+          <div class="app-card-alt rounded-2xl px-3 py-2 text-xs font-bold text-center" style="color: var(--app-primary);">${obPaceText(track)}</div>
+        </section>
+      `;
+    }
+
+    function renderOnboarding() {
+      if (!ob) return;
+      const el = ensureOnboardingRoot();
+      el.classList.remove('hidden');
+      const selCount = Object.keys(ob.sel).length;
+      const dots = [0, 1, 2, 3].map(i => `<span class="w-2.5 h-2.5 rounded-full ${i === ob.step ? 'app-btn-primary' : 'app-card-alt'}"></span>`).join('');
+      let body = '';
+
+      if (ob.step === 0) {
+        body = `
+          <section class="app-card rounded-3xl p-5 space-y-4 shadow-sm text-center">
+            <div class="text-5xl">📖</div>
+            <div>
+              <h1 class="font-extrabold text-xl">ברוך הבא ל"הלימוד היומי שלי"!</h1>
+              <p class="text-sm app-text-muted mt-1.5 leading-relaxed">שאלון קצר (דקה אחת) יתאים את האפליקציה בדיוק אליך: אילו ספרים תלמד, באיזה קצב יומי ומהיכן תתחיל.</p>
+            </div>
+            <div class="space-y-2 text-right">
+              <label class="text-sm font-extrabold block">איך קוראים לך? (שם פרטי)</label>
+              <input type="text" value="${escapeHtml(ob.name)}" oninput="obSetName(this.value)" placeholder="למשל: חגי" class="w-full rounded-2xl p-3.5 text-base font-bold app-card-alt focus:outline-none text-center">
+              <p class="text-xs app-text-muted">השם יופיע בברכות ברחבי האפליקציה, כדי שהכל ירגיש אישי 🙂</p>
+            </div>
+          </section>
+          ${ob.source === 'first' ? `<button onclick="skipOnboarding()" class="w-full py-2 text-xs font-bold app-text-muted underline">דלג לעת עתה - אבחר אחר כך מההגדרות</button>` : ''}
+        `;
+      } else if (ob.step === 1) {
+        const groups = [];
+        state.tracks.forEach(t => {
+          let g = groups.find(x => x.name === t.category);
+          if (!g) { g = { name: t.category, tracks: [] }; groups.push(g); }
+          g.tracks.push(t);
+        });
+        body = `
+          <section class="app-card rounded-3xl p-4 space-y-3 shadow-sm">
+            <div class="flex items-center justify-between">
+              <h2 class="font-extrabold text-base">מה תרצה ללמוד? 📚</h2>
+              <span class="px-3 py-1 rounded-full text-xs font-extrabold ${selCount ? 'app-btn-primary' : 'app-card-alt'}">${selCount} נבחרו</span>
+            </div>
+            <p class="text-xs app-text-muted leading-relaxed">אף אחד לא לומד את כל הספרים בבת אחת 🙂 בחר רק את הספרים שאתה רוצה ללמוד עכשיו - תמיד אפשר לשנות אחר כך.</p>
+          </section>
+          ${groups.map(g => `
+            <section class="space-y-2">
+              <h3 class="font-extrabold text-sm app-text-muted px-1">${g.name}</h3>
+              <div class="grid grid-cols-1 gap-2">
+                ${g.tracks.map(t => {
+                  const on = !!ob.sel[t.id];
+                  return `<button onclick="obToggleTrack('${t.id}')" class="p-3.5 rounded-2xl flex items-center gap-3 text-right ${on ? 'app-btn-primary shadow-md' : 'app-card'}">
+                    <span class="text-2xl">${t.icon}</span>
+                    <span class="flex-1">
+                      <span class="block font-extrabold text-sm">${t.titleHe}</span>
+                      <span class="block text-xs opacity-75">יחידת לימוד: ${t.unitSingular} • כ-${t.minutesPerUnit} דקות</span>
+                    </span>
+                    <span class="text-lg font-extrabold">${on ? '✓' : '➕'}</span>
+                  </button>`;
+                }).join('')}
+              </div>
+            </section>
+          `).join('')}
+        `;
+      } else if (ob.step === 2) {
+        body = `
+          <section class="app-card rounded-3xl p-4 space-y-2 shadow-sm">
+            <h2 class="font-extrabold text-base">קצב ונקודת התחלה 🎯</h2>
+            <p class="text-xs app-text-muted leading-relaxed">עבור כל ספר שבחרת: מהיכן מתחילים (איזו מסכת / כרך / ספר) וכמה לומדים בכל יום.</p>
+          </section>
+          ${state.tracks.filter(t => ob.sel[t.id]).map(track => renderObTrackCard(track)).join('')}
+        `;
+      } else {
+        const name = ob.name.trim();
+        body = `
+          <section class="app-card rounded-3xl p-5 space-y-3 shadow-sm text-center">
+            <div class="text-5xl">🎉</div>
+            <h2 class="font-extrabold text-xl">${name ? `נהדר, ${escapeHtml(name)}!` : 'הכל מוכן!'}</h2>
+            <p class="text-sm app-text-muted">זו תוכנית הלימוד האישית שלך:</p>
+            <div class="space-y-2 text-right">
+              ${state.tracks.filter(t => ob.sel[t.id]).map(track => {
+                const { sbSel } = obCtx(track);
+                return `<div class="app-card-alt rounded-2xl p-3 flex items-center gap-2.5">
+                  <span class="text-xl">${track.icon}</span>
+                  <div class="flex-1">
+                    <div class="font-extrabold text-sm">${track.titleHe}</div>
+                    <div class="text-xs app-text-muted">${sbSel.name.split('(')[0].trim()} • ${obPaceText(track)}</div>
+                  </div>
+                </div>`;
+              }).join('')}
+            </div>
+          </section>
+
+          <section class="app-card rounded-3xl p-4 space-y-3 shadow-sm">
+            <h3 class="font-extrabold text-sm">🎨 ערכת צבעים</h3>
+            <div class="grid grid-cols-3 gap-2">
+              <button onclick="obSetTheme('light')" class="py-2.5 rounded-2xl font-bold text-xs ${state.themeMode === 'light' ? 'app-btn-primary' : 'app-btn-secondary'}">☀️ בהיר</button>
+              <button onclick="obSetTheme('dark')" class="py-2.5 rounded-2xl font-bold text-xs ${state.themeMode === 'dark' ? 'app-btn-primary' : 'app-btn-secondary'}">🌙 כהה</button>
+              <button onclick="obSetTheme('system')" class="py-2.5 rounded-2xl font-bold text-xs ${state.themeMode === 'system' ? 'app-btn-primary' : 'app-btn-secondary'}">📱 אוטומטי</button>
+            </div>
+            <h3 class="font-extrabold text-sm pt-1">🔔 תזכורת יומית ללימוד</h3>
+            <div class="grid grid-cols-4 gap-2">
+              ${['07:30', '13:30', '20:30', '22:00'].map(t => `
+                <button onclick="obSetReminder('${t}')" class="py-2.5 rounded-2xl font-bold text-xs ${state.reminderTime === t ? 'app-btn-primary' : 'app-btn-secondary'}">${t}</button>
+              `).join('')}
+            </div>
+          </section>
+        `;
+      }
+
+      el.innerHTML = `
+        <div class="max-w-md mx-auto min-h-screen px-4 py-5 space-y-4 pb-28">
+          ${ob.source === 'settings' ? `
+            <div class="flex items-center justify-between">
+              <h1 class="font-extrabold text-lg">📝 שאלון ההעדפות</h1>
+              <button onclick="closeOnboarding()" class="px-3.5 py-2 rounded-2xl app-card font-extrabold text-sm">✕ סגור</button>
+            </div>
+          ` : ''}
+          <div class="flex items-center justify-center gap-2 py-1">${dots}</div>
+          ${body}
+          <div class="grid ${ob.step === 0 ? 'grid-cols-1' : 'grid-cols-2'} gap-2.5 pt-1">
+            ${ob.step > 0 ? `<button onclick="obBack()" class="py-3.5 rounded-2xl app-btn-secondary font-extrabold text-sm">→ חזור</button>` : ''}
+            ${ob.step < 3
+              ? `<button onclick="obNext()" class="py-3.5 rounded-2xl app-btn-primary font-extrabold text-sm shadow-md">המשך ←</button>`
+              : `<button onclick="finishOnboarding()" class="py-4 rounded-2xl app-btn-primary font-extrabold text-base shadow-md">🚀 בואו נתחיל ללמוד!</button>`}
+          </div>
+        </div>
+      `;
+      el.scrollTop = 0;
+    }
+
+    function finishOnboarding() {
+      if (Object.keys(ob.sel).length === 0) {
+        showToast('בחר לפחות ספר אחד כדי להתחיל 📚');
+        ob.step = 1;
+        renderOnboarding();
+        return;
+      }
+      state.userName = ob.name.trim().slice(0, 30);
+      const todayKey = toDateKey(new Date());
+      state.tracks.forEach(t => {
+        const s = ob.sel[t.id];
+        if (s) {
+          t.enabled = true;
+          t.pace.subBookId = s.subBookId;
+          t.pace.mode = s.mode;
+          t.pace.dailyUnits = s.dailyUnits || 1;
+          t.pace.targetDays = s.targetDays || 365;
+          if (t.id === 'gemara_bavli') t.pace.gemaraUnit = s.gemaraUnit;
+          t.pace.rangeFrom = s.rangeFrom || null;
+          t.pace.rangeTo = null;
+          t.pace.startDate = todayKey;
+          t.pace.offset = 0;
+        } else {
+          t.enabled = false;
+        }
+      });
+      state.tracks.forEach(syncUnitNames);
+      state.onboardingCompleted = true;
+      state.showObBanner = false;
+      saveState();
+      closeOnboarding();
+      navigateToPage('today');
+      showToast(state.userName ? `נתראה בלימוד, ${state.userName}! 🎉` : 'ההעדפות נשמרו בהצלחה! 🎉');
+    }
+
     // אתחול ראשוני
     loadState();
     tryFetchSefariaCalendar(state.selectedDateStr);
     startReminderDaemon();
     renderCurrentPage();
+    if (!state.onboardingCompleted) {
+      openOnboarding('first');
+    }
     if (state.syncUserId) {
       pullStateFromCloud(true);
     }

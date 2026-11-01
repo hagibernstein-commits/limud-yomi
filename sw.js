@@ -1,5 +1,5 @@
 /* הלימוד היומי שלי - Service Worker: מטמון מלא של מעטפת האפליקציה לעבודה אופליין */
-const CACHE_NAME = 'limud-yomi-v4';
+const CACHE_NAME = 'limud-yomi-v5';
 const APP_SHELL = [
   './',
   './index.html',
