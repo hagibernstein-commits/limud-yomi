@@ -3082,9 +3082,10 @@
       if (ob.source !== 'first') {
         state.tracks.forEach(t => {
           if (t.enabled) {
+            const isAmudGlobal = t.id === 'gemara_bavli' && t.pace.mode === 'global' && t.pace.gemaraUnit === 'amud';
             ob.sel[t.id] = {
               subBookId: t.pace.subBookId,
-              mode: (t.pace.mode === 'global') ? 'global' : (t.pace.mode === 'daily' ? 'daily' : 'days'),
+              mode: (t.pace.mode === 'global' && !isAmudGlobal) ? 'global' : (t.pace.mode === 'daily' || isAmudGlobal ? 'daily' : 'days'),
               dailyUnits: t.pace.dailyUnits || 1,
               targetDays: t.pace.targetDays || 365,
               gemaraUnit: t.pace.gemaraUnit || 'daf',
